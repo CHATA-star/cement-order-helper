@@ -3,6 +3,7 @@ interface OrderData {
   establishmentName: string;
   quantity: number;
   phoneNumber: string;
+  city: string;
   date: Date;
 }
 

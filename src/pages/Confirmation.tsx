@@ -10,6 +10,7 @@ interface OrderDetails {
   establishmentName: string;
   quantity: number;
   phoneNumber: string;
+  city: string;
 }
 
 const Confirmation = () => {
@@ -68,6 +69,10 @@ const Confirmation = () => {
                   <span className="font-medium">{orderDetails.quantity} tonnes</span>
                 </li>
                 <li className="flex justify-between">
+                  <span className="text-cement-600">Ville de livraison :</span>
+                  <span className="font-medium">{orderDetails.city}</span>
+                </li>
+                <li className="flex justify-between">
                   <span className="text-cement-600">Téléphone :</span>
                   <span className="font-medium">{orderDetails.phoneNumber}</span>
                 </li>
@@ -78,7 +83,7 @@ const Confirmation = () => {
               </ul>
             </div>
             <p className="text-center text-sm text-cement-500">
-              Un représentant vous contactera bientôt au {orderDetails.phoneNumber} pour confirmer votre commande.
+              Un représentant vous contactera bientôt au {orderDetails.phoneNumber} pour confirmer votre commande et finaliser la livraison à {orderDetails.city}.
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">

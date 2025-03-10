@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Truck, Package, Phone } from "lucide-react";
+import { Building, Truck, Package, Phone, MapPin, Info } from "lucide-react";
 import { addOrder } from "@/services/orderService";
 
 interface OrderFormData {
   establishmentName: string;
   quantity: number;
   phoneNumber: string;
+  city: string;
 }
 
 const CementOrderForm = () => {
@@ -20,10 +21,14 @@ const CementOrderForm = () => {
     establishmentName: "",
     quantity: 0,
     phoneNumber: "",
+    city: "",
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Available cement quantity
+  const availableQuantity = 2000; // en tonnes
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -55,10 +60,28 @@ const CementOrderForm = () => {
       return;
     }
 
+    if (formData.quantity > availableQuantity) {
+      toast({
+        title: "Erreur",
+        description: `La quantité demandée dépasse notre stock disponible (${availableQuantity} tonnes)`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.phoneNumber.trim()) {
       toast({
         title: "Erreur",
         description: "Veuillez saisir votre numéro de téléphone",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.city.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez indiquer la ville de livraison",
         variant: "destructive",
       });
       return;
@@ -89,6 +112,12 @@ const CementOrderForm = () => {
         <CardDescription className="text-center">
           Entrez les informations nécessaires pour votre commande
         </CardDescription>
+        <div className="mt-2 bg-cement-100 p-3 rounded-md flex items-center gap-2">
+          <Info className="h-5 w-5 text-cement-600" />
+          <p className="text-sm text-cement-700">
+            Stock disponible actuellement: <span className="font-bold">{availableQuantity} tonnes</span>
+          </p>
+        </div>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -117,8 +146,25 @@ const CementOrderForm = () => {
               name="quantity"
               type="number"
               min="1"
+              max={availableQuantity}
               placeholder="Quantité de ciment"
               value={formData.quantity || ""}
+              onChange={handleChange}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <MapPin className="h-4 w-4 text-cement-500" />
+              <Label htmlFor="city">Ville de livraison</Label>
+            </div>
+            <Input
+              id="city"
+              name="city"
+              type="text"
+              placeholder="Ville où le ciment doit être livré"
+              value={formData.city}
               onChange={handleChange}
               className="w-full"
             />
