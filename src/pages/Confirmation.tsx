@@ -9,6 +9,7 @@ import MainLayout from "@/components/layout/MainLayout";
 interface OrderDetails {
   establishmentName: string;
   quantity: number;
+  phoneNumber: string;
 }
 
 const Confirmation = () => {
@@ -67,13 +68,17 @@ const Confirmation = () => {
                   <span className="font-medium">{orderDetails.quantity} tonnes</span>
                 </li>
                 <li className="flex justify-between">
+                  <span className="text-cement-600">Téléphone :</span>
+                  <span className="font-medium">{orderDetails.phoneNumber}</span>
+                </li>
+                <li className="flex justify-between">
                   <span className="text-cement-600">Date de demande :</span>
                   <span className="font-medium">{new Date().toLocaleDateString()}</span>
                 </li>
               </ul>
             </div>
             <p className="text-center text-sm text-cement-500">
-              Un représentant vous contactera bientôt pour confirmer votre commande.
+              Un représentant vous contactera bientôt au {orderDetails.phoneNumber} pour confirmer votre commande.
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">

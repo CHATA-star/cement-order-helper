@@ -2,6 +2,7 @@
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import CementOrderForm from "@/components/forms/CementOrderForm";
+import OrderStats from "@/components/dashboard/OrderStats";
 import { Building, Truck, Package, CheckCircle2 } from "lucide-react";
 
 const Index = () => {
@@ -17,6 +18,8 @@ const Index = () => {
             Remplissez le formulaire ci-dessous pour soumettre votre demande.
           </p>
         </section>
+
+        <OrderStats />
 
         <section className="mb-12">
           <div className="grid md:grid-cols-3 gap-6 mb-10">

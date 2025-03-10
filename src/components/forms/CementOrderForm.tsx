@@ -6,17 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Truck, Package } from "lucide-react";
+import { Building, Truck, Package, Phone } from "lucide-react";
+import { addOrder } from "@/services/orderService";
 
 interface OrderFormData {
   establishmentName: string;
   quantity: number;
+  phoneNumber: string;
 }
 
 const CementOrderForm = () => {
   const [formData, setFormData] = useState<OrderFormData>({
     establishmentName: "",
     quantity: 0,
+    phoneNumber: "",
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -52,7 +55,19 @@ const CementOrderForm = () => {
       return;
     }
 
+    if (!formData.phoneNumber.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir votre numéro de téléphone",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
+
+    // Add order to localStorage
+    addOrder(formData);
 
     // Simulate API call
     setTimeout(() => {
@@ -104,6 +119,22 @@ const CementOrderForm = () => {
               min="1"
               placeholder="Quantité de ciment"
               value={formData.quantity || ""}
+              onChange={handleChange}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Phone className="h-4 w-4 text-cement-500" />
+              <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
+            </div>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              placeholder="Votre numéro de téléphone"
+              value={formData.phoneNumber}
               onChange={handleChange}
               className="w-full"
             />
