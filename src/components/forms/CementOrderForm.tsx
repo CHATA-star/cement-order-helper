@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Truck, Package, Phone, MapPin, Info } from "lucide-react";
+import { Building, Truck, Package, Phone, MapPin, Info, MessageSquare } from "lucide-react";
 import { addOrder } from "@/services/orderService";
 
 interface OrderFormData {
@@ -184,6 +184,19 @@ const CementOrderForm = () => {
               onChange={handleChange}
               className="w-full"
             />
+          </div>
+
+          <div className="bg-green-50 p-3 rounded-md border border-green-100">
+            <div className="flex items-start gap-2">
+              <MessageSquare className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-green-800">Commande via WhatsApp</p>
+                <p className="text-xs text-green-700 mt-1">
+                  Vous pouvez également soumettre votre commande directement via WhatsApp. 
+                  Notre équipe commerciale est disponible pour traiter vos demandes rapidement.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
         <CardFooter>

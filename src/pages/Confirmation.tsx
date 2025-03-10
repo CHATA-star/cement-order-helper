@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, MessageSquare } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 
 interface OrderDetails {
@@ -85,6 +85,19 @@ const Confirmation = () => {
             <p className="text-center text-sm text-cement-500">
               Un représentant vous contactera bientôt au {orderDetails.phoneNumber} pour confirmer votre commande et finaliser la livraison à {orderDetails.city}.
             </p>
+
+            <div className="bg-green-50 p-3 rounded-md border border-green-100">
+              <div className="flex items-start gap-2">
+                <MessageSquare className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-green-800">Commande via WhatsApp</p>
+                  <p className="text-xs text-green-700 mt-1">
+                    Pour un suivi rapide, vous pouvez également contacter notre service commercial via WhatsApp 
+                    avec votre numéro de commande. Notre équipe est disponible pour répondre à toutes vos questions.
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button 
