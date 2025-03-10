@@ -13,14 +13,17 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Building size={24} />
-            <h1 className="text-xl font-bold">CementOrders</h1>
+            <div>
+              <h1 className="text-xl font-bold">CHATA CIMENT</h1>
+              <p className="text-xs text-cement-200">Une filiale de CHATA GLOBAL</p>
+            </div>
           </div>
         </div>
       </header>
       <main className="flex-grow container mx-auto py-8 px-4">{children}</main>
       <footer className="bg-cement-800 text-cement-100 p-4 mt-8">
         <div className="container mx-auto text-center text-sm">
-          &copy; {new Date().getFullYear()} CementOrders - Tous droits réservés
+          &copy; {new Date().getFullYear()} CHATA GLOBAL - Tous droits réservés
         </div>
       </footer>
     </div>

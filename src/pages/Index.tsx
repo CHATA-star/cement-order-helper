@@ -11,7 +11,7 @@ const Index = () => {
       <div className="flex flex-col space-y-8">
         <section className="text-center max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold text-cement-800 mb-4">
-            Plateforme de Commande de Ciment
+            Plateforme de Commande de CHATA CIMENT
           </h1>
           <p className="text-cement-600 mb-8">
             Une solution simple et efficace pour vos commandes de ciment. 
