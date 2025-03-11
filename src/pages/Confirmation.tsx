@@ -12,6 +12,8 @@ interface OrderDetails {
   city: string;
 }
 
+const WHATSAPP_NUMBER = "0161080251";
+
 const Confirmation = () => {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const navigate = useNavigate();
@@ -41,7 +43,7 @@ const Confirmation = () => {
     
     const encodedMessage = encodeURIComponent(message);
     
-    window.open(`https://wa.me/0161080251?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
   };
 
   if (!orderDetails) {
@@ -118,7 +120,7 @@ const Confirmation = () => {
                   <p className="text-sm font-medium text-green-800">Suivi via WhatsApp</p>
                   <p className="text-xs text-green-700 mt-1">
                     Pour un suivi rapide, vous pouvez contacter notre service commercial via WhatsApp 
-                    au <span className="font-semibold">0161080251</span> avec votre numéro de commande.
+                    au <span className="font-semibold">{WHATSAPP_NUMBER}</span> avec votre numéro de commande.
                   </p>
                   <Button 
                     variant="outline"
