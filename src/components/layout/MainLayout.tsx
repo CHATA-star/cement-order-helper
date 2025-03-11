@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Building } from "lucide-react";
+import ChataCimentLogo from "../logo/ChataCimentLogo";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -11,8 +12,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     <div className="min-h-screen flex flex-col bg-cement-50">
       <header className="bg-cement-800 text-white p-4 shadow-md">
         <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Building size={24} />
+          <div className="flex items-center space-x-3">
+            <ChataCimentLogo size="sm" />
             <div>
               <h1 className="text-xl font-bold">CHATA CIMENT</h1>
               <p className="text-xs text-cement-200">Une filiale de CHATA GLOBAL</p>

@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Package } from "lucide-react";
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import AvailabilityInfo from "./AvailabilityInfo";
+import ChataCimentLogo from "../logo/ChataCimentLogo";
 
 interface OrderFormHeaderProps {
   availableQuantity: number;
@@ -11,8 +11,8 @@ interface OrderFormHeaderProps {
 const OrderFormHeader = ({ availableQuantity }: OrderFormHeaderProps) => {
   return (
     <>
-      <div className="flex items-center justify-center mb-2">
-        <Package className="h-10 w-10 text-cement-600" />
+      <div className="flex items-center justify-center mb-4">
+        <ChataCimentLogo size="lg" className="mb-2" />
       </div>
       <CardTitle className="text-2xl text-center">Commande de Ciment</CardTitle>
       <CardDescription className="text-center">
