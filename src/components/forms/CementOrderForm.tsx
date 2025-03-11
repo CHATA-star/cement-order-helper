@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Truck, Package, Phone, MapPin, Info, MessageSquare } from "lucide-react";
+import { Building, Truck, Package, Phone, MapPin, Info, MessageSquare, Clock } from "lucide-react";
 import { addOrder } from "@/services/orderService";
 
 interface OrderFormData {
@@ -27,7 +26,6 @@ const CementOrderForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Available cement quantity
   const availableQuantity = 2000; // en tonnes
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +39,6 @@ const CementOrderForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validation
     if (!formData.establishmentName.trim()) {
       toast({
         title: "Erreur",
@@ -89,17 +86,25 @@ const CementOrderForm = () => {
 
     setLoading(true);
 
-    // Add order to localStorage
     addOrder(formData);
 
-    // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      // Store order in session storage for confirmation page
       sessionStorage.setItem("cementOrder", JSON.stringify(formData));
-      // Navigate to confirmation page
       navigate("/confirmation");
     }, 1500);
+  };
+
+  const handleWhatsAppClick = () => {
+    const message = `Bonjour, je souhaite commander du ciment.
+    - Établissement: ${formData.establishmentName || "[Nom de l'établissement]"}
+    - Quantité: ${formData.quantity || 0} tonnes
+    - Ville de livraison: ${formData.city || "[Ville]"}
+    - Téléphone: ${formData.phoneNumber || "[Téléphone]"}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
   };
 
   return (
@@ -116,6 +121,12 @@ const CementOrderForm = () => {
           <Info className="h-5 w-5 text-cement-600" />
           <p className="text-sm text-cement-700">
             Stock disponible actuellement: <span className="font-bold">{availableQuantity} tonnes</span>
+          </p>
+        </div>
+        <div className="mt-2 bg-amber-50 p-3 rounded-md flex items-start gap-2">
+          <Clock className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-amber-700">
+            <span className="font-medium">Délai de livraison:</span> Minimum 24h et maximum 72h après confirmation de votre commande
           </p>
         </div>
       </CardHeader>
@@ -192,9 +203,19 @@ const CementOrderForm = () => {
               <div>
                 <p className="text-sm font-medium text-green-800">Commande via WhatsApp</p>
                 <p className="text-xs text-green-700 mt-1">
-                  Vous pouvez également soumettre votre commande directement via WhatsApp. 
+                  Vous pouvez également soumettre votre commande directement via WhatsApp au <span className="font-semibold">{whatsappNumber}</span>. 
                   Notre équipe commerciale est disponible pour traiter vos demandes rapidement.
                 </p>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 bg-green-100 border-green-200 hover:bg-green-200 text-green-800"
+                  onClick={handleWhatsAppClick}
+                >
+                  <MessageSquare className="mr-1 h-4 w-4" />
+                  Commander par WhatsApp
+                </Button>
               </div>
             </div>
           </div>
@@ -214,3 +235,4 @@ const CementOrderForm = () => {
 };
 
 export default CementOrderForm;
+

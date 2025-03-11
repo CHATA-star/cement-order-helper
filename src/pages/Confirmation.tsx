@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, MessageSquare } from "lucide-react";
+import { CheckCircle2, MessageSquare, Clock } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 
 interface OrderDetails {
@@ -23,7 +22,6 @@ const Confirmation = () => {
     if (storedOrder) {
       setOrderDetails(JSON.parse(storedOrder));
     } else {
-      // Redirect to form if no order data exists
       navigate("/");
     }
   }, [navigate]);
@@ -31,6 +29,19 @@ const Confirmation = () => {
   const handleNewOrder = () => {
     sessionStorage.removeItem("cementOrder");
     navigate("/");
+  };
+
+  const handleWhatsAppContact = () => {
+    const message = `Bonjour, je voudrais suivre le statut de ma commande de ciment:
+    - Établissement: ${orderDetails?.establishmentName}
+    - Quantité: ${orderDetails?.quantity} tonnes
+    - Ville de livraison: ${orderDetails?.city}
+    - Téléphone: ${orderDetails?.phoneNumber}
+    - Date de demande: ${new Date().toLocaleDateString()}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    
+    window.open(`https://wa.me/0161080251?text=${encodedMessage}`, '_blank');
   };
 
   if (!orderDetails) {
@@ -82,6 +93,20 @@ const Confirmation = () => {
                 </li>
               </ul>
             </div>
+            
+            <div className="bg-amber-50 p-3 rounded-md border border-amber-100">
+              <div className="flex items-start gap-2">
+                <Clock className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Délai de livraison</p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Votre commande sera livrée dans un délai minimum de 24h et maximum de 72h 
+                    après confirmation par notre équipe commerciale.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <p className="text-center text-sm text-cement-500">
               Un représentant vous contactera bientôt au {orderDetails.phoneNumber} pour confirmer votre commande et finaliser la livraison à {orderDetails.city}.
             </p>
@@ -90,11 +115,20 @@ const Confirmation = () => {
               <div className="flex items-start gap-2">
                 <MessageSquare className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-green-800">Commande via WhatsApp</p>
+                  <p className="text-sm font-medium text-green-800">Suivi via WhatsApp</p>
                   <p className="text-xs text-green-700 mt-1">
-                    Pour un suivi rapide, vous pouvez également contacter notre service commercial via WhatsApp 
-                    avec votre numéro de commande. Notre équipe est disponible pour répondre à toutes vos questions.
+                    Pour un suivi rapide, vous pouvez contacter notre service commercial via WhatsApp 
+                    au <span className="font-semibold">0161080251</span> avec votre numéro de commande.
                   </p>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 bg-green-100 border-green-200 hover:bg-green-200 text-green-800"
+                    onClick={handleWhatsAppContact}
+                  >
+                    <MessageSquare className="mr-1 h-4 w-4" />
+                    Contacter par WhatsApp
+                  </Button>
                 </div>
               </div>
             </div>
