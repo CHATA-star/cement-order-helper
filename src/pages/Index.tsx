@@ -3,7 +3,9 @@ import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import CementOrderForm from "@/components/forms/CementOrderForm";
 import OrderStats from "@/components/dashboard/OrderStats";
-import { Building, Truck, Package, CheckCircle2, MapPin } from "lucide-react";
+import { Building, Truck, Package, CheckCircle2, MapPin, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
@@ -62,6 +64,21 @@ const Index = () => {
           </div>
 
           <CementOrderForm />
+          
+          <div className="mt-12 text-center">
+            <h3 className="text-xl font-semibold text-cement-700 mb-4">
+              Votre avis compte pour nous
+            </h3>
+            <p className="text-cement-600 mb-6 max-w-xl mx-auto">
+              Partagez votre expérience avec nos produits et services pour nous aider à nous améliorer constamment.
+            </p>
+            <Link to="/reviews">
+              <Button className="bg-cement-600 hover:bg-cement-700">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Voir et laisser des avis
+              </Button>
+            </Link>
+          </div>
         </section>
       </div>
     </MainLayout>
