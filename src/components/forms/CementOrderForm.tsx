@@ -8,6 +8,7 @@ import { addOrder } from "@/services/orderService";
 import OrderFormFields from "./OrderFormFields";
 import OrderFormHeader from "./OrderFormHeader";
 import WhatsAppSection from "./WhatsAppSection";
+import { MessageSquare } from "lucide-react";
 
 interface OrderFormData {
   establishmentName: string;
@@ -28,6 +29,7 @@ const CementOrderForm = () => {
   const { toast } = useToast();
   
   const availableQuantity = 2000; // en tonnes
+  const WHATSAPP_NUMBER = "0161080251";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,16 +39,14 @@ const CementOrderForm = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateForm = () => {
     if (!formData.establishmentName.trim()) {
       toast({
         title: "Erreur",
         description: "Veuillez saisir le nom de votre établissement",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (formData.quantity <= 0) {
@@ -55,7 +55,7 @@ const CementOrderForm = () => {
         description: "La quantité doit être supérieure à 0",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (formData.quantity > availableQuantity) {
@@ -64,7 +64,7 @@ const CementOrderForm = () => {
         description: `La quantité demandée dépasse notre stock disponible (${availableQuantity} tonnes)`,
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (!formData.phoneNumber.trim()) {
@@ -73,7 +73,7 @@ const CementOrderForm = () => {
         description: "Veuillez saisir votre numéro de téléphone",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (!formData.city.trim()) {
@@ -82,8 +82,16 @@ const CementOrderForm = () => {
         description: "Veuillez indiquer la ville de livraison",
         variant: "destructive",
       });
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
 
     setLoading(true);
 
@@ -94,6 +102,25 @@ const CementOrderForm = () => {
       sessionStorage.setItem("cementOrder", JSON.stringify(formData));
       navigate("/confirmation");
     }, 1500);
+  };
+
+  const handleWhatsAppSubmit = () => {
+    if (!validateForm()) return;
+    
+    const message = `Bonjour, je souhaite commander du ciment.
+    - Établissement: ${formData.establishmentName}
+    - Quantité: ${formData.quantity} tonnes
+    - Ville de livraison: ${formData.city}
+    - Téléphone: ${formData.phoneNumber}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Save order data before redirecting
+    addOrder(formData);
+    sessionStorage.setItem("cementOrder", JSON.stringify(formData));
+    
+    // Open WhatsApp in a new tab
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
   };
 
   return (
@@ -112,11 +139,13 @@ const CementOrderForm = () => {
         </CardContent>
         <CardFooter className="bg-gradient-to-r from-cement-50 to-cement-100 rounded-b-lg border-t border-cement-200 p-4">
           <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium shadow-md transition-all duration-300 hover:shadow-lg"
+            type="button" 
+            onClick={handleWhatsAppSubmit}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium shadow-md transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-2"
             disabled={loading}
           >
-            {loading ? "Traitement en cours..." : "Soumettre la commande"}
+            <MessageSquare className="h-5 w-5" />
+            {loading ? "Traitement en cours..." : "Commander par WhatsApp"}
           </Button>
         </CardFooter>
       </form>
