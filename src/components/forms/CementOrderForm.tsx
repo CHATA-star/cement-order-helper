@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -96,12 +97,12 @@ const CementOrderForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-      <CardHeader className="space-y-1">
+    <Card className="w-full max-w-lg mx-auto bg-gradient-to-br from-white to-cement-50 shadow-xl border-cement-200">
+      <CardHeader className="space-y-1 bg-gradient-to-r from-cement-700 to-cement-800 text-white rounded-t-lg">
         <OrderFormHeader availableQuantity={availableQuantity} />
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-6">
           <OrderFormFields 
             formData={formData}
             availableQuantity={availableQuantity}
@@ -109,10 +110,10 @@ const CementOrderForm = () => {
           />
           <WhatsAppSection formData={formData} />
         </CardContent>
-        <CardFooter>
+        <CardFooter className="bg-gradient-to-r from-cement-50 to-cement-100 rounded-b-lg border-t border-cement-200 p-4">
           <Button 
             type="submit" 
-            className="w-full bg-cement-600 hover:bg-cement-700 text-white"
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium shadow-md transition-all duration-300 hover:shadow-lg"
             disabled={loading}
           >
             {loading ? "Traitement en cours..." : "Soumettre la commande"}
