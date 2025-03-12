@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -25,10 +24,10 @@ const CementOrderForm = () => {
     city: "",
   });
   const [loading, setLoading] = useState(false);
+  const [availableQuantity, setAvailableQuantity] = useState(2000); // en tonnes
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const availableQuantity = 2000; // en tonnes
   const WHATSAPP_NUMBER = "0161080251";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +87,10 @@ const CementOrderForm = () => {
     return true;
   };
 
+  const handleUpdateQuantity = (newQuantity: number) => {
+    setAvailableQuantity(newQuantity);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -126,7 +129,10 @@ const CementOrderForm = () => {
   return (
     <Card className="w-full max-w-lg mx-auto bg-gradient-to-br from-white to-cement-50 shadow-xl border-cement-200">
       <CardHeader className="space-y-1 bg-gradient-to-r from-cement-700 to-cement-800 text-white rounded-t-lg">
-        <OrderFormHeader availableQuantity={availableQuantity} />
+        <OrderFormHeader 
+          availableQuantity={availableQuantity}
+          onUpdateQuantity={handleUpdateQuantity}
+        />
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4 p-6">

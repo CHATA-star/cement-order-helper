@@ -6,9 +6,10 @@ import ChataCimentLogo from "../logo/ChataCimentLogo";
 
 interface OrderFormHeaderProps {
   availableQuantity: number;
+  onUpdateQuantity: (newQuantity: number) => void;
 }
 
-const OrderFormHeader = ({ availableQuantity }: OrderFormHeaderProps) => {
+const OrderFormHeader = ({ availableQuantity, onUpdateQuantity }: OrderFormHeaderProps) => {
   return (
     <>
       <div className="flex items-center justify-center mb-4">
@@ -18,7 +19,10 @@ const OrderFormHeader = ({ availableQuantity }: OrderFormHeaderProps) => {
       <CardDescription className="text-center">
         Entrez les informations nécessaires pour votre commande
       </CardDescription>
-      <AvailabilityInfo availableQuantity={availableQuantity} />
+      <AvailabilityInfo 
+        availableQuantity={availableQuantity}
+        onUpdateQuantity={onUpdateQuantity}
+      />
     </>
   );
 };

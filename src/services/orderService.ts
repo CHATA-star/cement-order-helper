@@ -1,4 +1,3 @@
-
 interface OrderData {
   establishmentName: string;
   quantity: number;
@@ -47,4 +46,14 @@ export const getMonthlyTotal = (): number => {
   return orders
     .filter(order => new Date(order.date) >= startOfMonth)
     .reduce((total, order) => total + order.quantity, 0);
+};
+
+// Set weekly total
+export const setWeeklyTotal = (total: number): void => {
+  localStorage.setItem('weekly_total', total.toString());
+};
+
+// Set monthly total
+export const setMonthlyTotal = (total: number): void => {
+  localStorage.setItem('monthly_total', total.toString());
 };
