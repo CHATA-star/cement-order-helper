@@ -22,17 +22,17 @@ const Index = () => {
           </p>
         </section>
 
-        {/* Account Registration Section - Moved to top */}
-        <section className="bg-gradient-to-r from-cement-50 to-cement-100 py-12 rounded-lg border border-cement-200 mb-8">
+        {/* Account Registration Section - Green background */}
+        <section className="bg-gradient-to-r from-green-50 to-green-100 py-12 rounded-lg border border-green-200 mb-8">
           <div className="max-w-xl mx-auto px-4">
             <div className="text-center mb-8">
               <div className="inline-flex bg-white p-3 rounded-full shadow-sm mb-4">
-                <UserPlus className="h-8 w-8 text-cement-600" />
+                <UserPlus className="h-8 w-8 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-cement-800 mb-4">
+              <h2 className="text-2xl font-bold text-green-800 mb-4">
                 Créez votre compte CHATA CIMENT
               </h2>
-              <p className="text-cement-600">
+              <p className="text-green-600">
                 Inscrivez-vous pour accéder plus facilement à notre plateforme et bénéficier d'un suivi personnalisé de vos commandes.
               </p>
             </div>
@@ -42,8 +42,8 @@ const Index = () => {
             </div>
             
             <div className="text-center mt-6">
-              <p className="text-cement-500 text-sm">
-                Déjà inscrit ? <Link to="/" className="text-cement-700 font-medium hover:underline inline-flex items-center"><LogIn className="h-3 w-3 mr-1" /> Connectez-vous</Link>
+              <p className="text-green-500 text-sm">
+                Déjà inscrit ? <Link to="/" className="text-green-700 font-medium hover:underline inline-flex items-center"><LogIn className="h-3 w-3 mr-1" /> Connectez-vous</Link>
               </p>
             </div>
           </div>
@@ -101,7 +101,7 @@ const Index = () => {
               Partagez votre expérience avec nos produits et services pour nous aider à nous améliorer constamment.
             </p>
             <Link to="/reviews">
-              <Button className="bg-cement-600 hover:bg-cement-700">
+              <Button className="bg-red-600 hover:bg-red-700 text-white">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Voir et laisser des avis
               </Button>
