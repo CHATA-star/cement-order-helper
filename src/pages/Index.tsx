@@ -22,6 +22,33 @@ const Index = () => {
           </p>
         </section>
 
+        {/* Account Registration Section - Moved to top */}
+        <section className="bg-gradient-to-r from-cement-50 to-cement-100 py-12 rounded-lg border border-cement-200 mb-8">
+          <div className="max-w-xl mx-auto px-4">
+            <div className="text-center mb-8">
+              <div className="inline-flex bg-white p-3 rounded-full shadow-sm mb-4">
+                <UserPlus className="h-8 w-8 text-cement-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-cement-800 mb-4">
+                Créez votre compte CHATA CIMENT
+              </h2>
+              <p className="text-cement-600">
+                Inscrivez-vous pour accéder plus facilement à notre plateforme et bénéficier d'un suivi personnalisé de vos commandes.
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <SignUpForm />
+            </div>
+            
+            <div className="text-center mt-6">
+              <p className="text-cement-500 text-sm">
+                Déjà inscrit ? <Link to="/" className="text-cement-700 font-medium hover:underline inline-flex items-center"><LogIn className="h-3 w-3 mr-1" /> Connectez-vous</Link>
+              </p>
+            </div>
+          </div>
+        </section>
+
         <OrderStats />
 
         <section className="mb-12">
@@ -79,33 +106,6 @@ const Index = () => {
                 Voir et laisser des avis
               </Button>
             </Link>
-          </div>
-        </section>
-
-        {/* New Account Registration Section */}
-        <section className="bg-gradient-to-r from-cement-50 to-cement-100 py-12 rounded-lg border border-cement-200 mb-8">
-          <div className="max-w-xl mx-auto px-4">
-            <div className="text-center mb-8">
-              <div className="inline-flex bg-white p-3 rounded-full shadow-sm mb-4">
-                <UserPlus className="h-8 w-8 text-cement-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-cement-800 mb-4">
-                Créez votre compte CHATA CIMENT
-              </h2>
-              <p className="text-cement-600">
-                Inscrivez-vous pour accéder plus facilement à notre plateforme et bénéficier d'un suivi personnalisé de vos commandes.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <SignUpForm />
-            </div>
-            
-            <div className="text-center mt-6">
-              <p className="text-cement-500 text-sm">
-                Déjà inscrit ? <Link to="/" className="text-cement-700 font-medium hover:underline inline-flex items-center"><LogIn className="h-3 w-3 mr-1" /> Connectez-vous</Link>
-              </p>
-            </div>
           </div>
         </section>
       </div>
