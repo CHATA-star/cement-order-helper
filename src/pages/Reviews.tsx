@@ -2,7 +2,6 @@
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
-import SignUpForm from "@/components/forms/SignUpForm";
 
 const Reviews = () => {
   return (
@@ -19,19 +18,6 @@ const Reviews = () => {
         </section>
 
         <ReviewsSection />
-
-        <section className="bg-cement-50 py-12 rounded-lg border border-cement-100">
-          <div className="max-w-xl mx-auto px-4">
-            <h2 className="text-2xl font-bold text-cement-800 mb-6 text-center">
-              Inscrivez-vous pour recevoir nos messages
-            </h2>
-            <p className="text-cement-600 mb-8 text-center">
-              Restez informés de nos offres spéciales et nouveaux produits. 
-              Nous vous contacterons uniquement pour des informations pertinentes.
-            </p>
-            <SignUpForm />
-          </div>
-        </section>
       </div>
     </MainLayout>
   );
