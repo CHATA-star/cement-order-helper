@@ -12,13 +12,14 @@ const Index = () => {
   return (
     <MainLayout>
       <div className="flex flex-col space-y-8">
+        {/* Warm Welcome Section */}
         <section className="text-center max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-cement-800 mb-4">
-            Plateforme de Commande de CHATA CIMENT
+          <h1 className="text-3xl font-bold text-amber-700 mb-4">
+            Bienvenue chez CHATA CIMENT
           </h1>
-          <p className="text-cement-600 mb-8">
-            Une solution simple et efficace pour vos commandes de ciment. 
-            Remplissez le formulaire ci-dessous pour soumettre votre demande.
+          <p className="text-amber-600 mb-8 text-lg">
+            Nous sommes ravis de vous accueillir sur notre plateforme. Pour profiter pleinement de nos services 
+            et suivre vos commandes, créez votre compte dès maintenant.
           </p>
         </section>
 
@@ -47,6 +48,17 @@ const Index = () => {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Platform Description Section - Moved above the stats */}
+        <section className="text-center max-w-3xl mx-auto mb-4">
+          <h2 className="text-2xl font-bold text-cement-800 mb-3">
+            Plateforme de Commande de CHATA CIMENT
+          </h2>
+          <p className="text-cement-600">
+            Une solution simple et efficace pour vos commandes de ciment. 
+            Remplissez le formulaire ci-dessous pour soumettre votre demande.
+          </p>
         </section>
 
         <OrderStats />
