@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Building, MessageCircle } from "lucide-react";
+import { Building, MessageCircle, ShoppingCart } from "lucide-react";
 import ChataCimentLogo from "../logo/ChataCimentLogo";
 import { Link } from "react-router-dom";
 
@@ -24,6 +24,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-amber-100 hover:text-white transition-colors hover:underline">
               Accueil
+            </Link>
+            <Link to="/commande" className="text-amber-100 hover:text-white transition-colors hover:underline flex items-center">
+              <ShoppingCart className="h-4 w-4 mr-1" />
+              Commander
             </Link>
             <Link to="/reviews" className="text-amber-100 hover:text-white transition-colors hover:underline flex items-center">
               <MessageCircle className="h-4 w-4 mr-1" />

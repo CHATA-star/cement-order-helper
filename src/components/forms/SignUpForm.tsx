@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, User, Lock, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useNavigate } from "react-router-dom";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ const SignUpForm = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +52,15 @@ const SignUpForm = () => {
     // Show success message and reset form
     toast({
       title: "Inscription réussie",
-      description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
+      description: "Votre compte a été créé avec succès. Vous pouvez maintenant passer votre commande.",
     });
     
     setIsSubmitted(true);
+    
+    // Rediriger vers la page de commande après 2 secondes
+    setTimeout(() => {
+      navigate('/commande');
+    }, 2000);
   };
 
   if (isSubmitted) {
@@ -66,14 +73,8 @@ const SignUpForm = () => {
         </div>
         <h3 className="text-xl font-semibold text-cement-800 mb-2">Inscription réussie !</h3>
         <p className="text-cement-600 mb-4">
-          Votre compte a été créé avec succès. Vous pouvez maintenant accéder à toutes les fonctionnalités de CHATA CIMENT.
+          Votre compte a été créé avec succès. Vous allez être redirigé vers la page de commande...
         </p>
-        <Button 
-          onClick={() => setIsSubmitted(false)}
-          variant="outline"
-        >
-          Nouvelle inscription
-        </Button>
       </div>
     );
   }
