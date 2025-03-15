@@ -9,6 +9,7 @@ import Commande from "./pages/Commande";
 import Confirmation from "./pages/Confirmation";
 import NotFound from "./pages/NotFound";
 import Reviews from "./pages/Reviews";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/commande" element={<Commande />} />
           <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/reviews" element={<Reviews />} />
+          <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
