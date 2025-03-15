@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { setWeeklyTotal, setMonthlyTotal } from "@/services/orderService";
 
-const OrderStats = () => {
+interface OrderStatsProps {
+  isAdmin?: boolean;
+}
+
+const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   const [isEditingWeekly, setIsEditingWeekly] = useState(false);
   const [isEditingMonthly, setIsEditingMonthly] = useState(false);
   const [weeklyTotal, setWeeklyTotal] = useState(0);
@@ -29,19 +33,21 @@ const OrderStats = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => {
-              setIsEditingWeekly(!isEditingWeekly);
-              setTempWeekly(weeklyTotal);
-            }}
-          >
-            <Edit2Icon className="h-4 w-4 text-cement-500" />
-          </Button>
+          {isAdmin && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                setIsEditingWeekly(!isEditingWeekly);
+                setTempWeekly(weeklyTotal);
+              }}
+            >
+              <Edit2Icon className="h-4 w-4 text-cement-500" />
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-          {isEditingWeekly ? (
+          {isEditingWeekly && isAdmin ? (
             <div className="flex items-center gap-2">
               <Input
                 type="number"
@@ -61,19 +67,21 @@ const OrderStats = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => {
-              setIsEditingMonthly(!isEditingMonthly);
-              setTempMonthly(monthlyTotal);
-            }}
-          >
-            <Edit2Icon className="h-4 w-4 text-cement-500" />
-          </Button>
+          {isAdmin && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                setIsEditingMonthly(!isEditingMonthly);
+                setTempMonthly(monthlyTotal);
+              }}
+            >
+              <Edit2Icon className="h-4 w-4 text-cement-500" />
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-          {isEditingMonthly ? (
+          {isEditingMonthly && isAdmin ? (
             <div className="flex items-center gap-2">
               <Input
                 type="number"

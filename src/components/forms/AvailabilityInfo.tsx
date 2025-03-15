@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 interface AvailabilityInfoProps {
   availableQuantity: number;
   onUpdateQuantity: (newQuantity: number) => void;
+  isAdmin?: boolean;
 }
 
-const AvailabilityInfo = ({ availableQuantity, onUpdateQuantity }: AvailabilityInfoProps) => {
+const AvailabilityInfo = ({ availableQuantity, onUpdateQuantity, isAdmin = false }: AvailabilityInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempQuantity, setTempQuantity] = useState(availableQuantity);
 
@@ -26,7 +27,7 @@ const AvailabilityInfo = ({ availableQuantity, onUpdateQuantity }: AvailabilityI
             <Info className="h-5 w-5 text-cement-600" />
             <p className="text-sm text-cement-700">
               Stock disponible actuellement: 
-              {isEditing ? (
+              {isEditing && isAdmin ? (
                 <span className="ml-2 inline-flex items-center gap-2">
                   <Input
                     type="number"
@@ -41,16 +42,18 @@ const AvailabilityInfo = ({ availableQuantity, onUpdateQuantity }: AvailabilityI
               )}
             </p>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => {
-              setIsEditing(!isEditing);
-              setTempQuantity(availableQuantity);
-            }}
-          >
-            <Edit2 className="h-4 w-4 text-cement-600" />
-          </Button>
+          {isAdmin && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                setIsEditing(!isEditing);
+                setTempQuantity(availableQuantity);
+              }}
+            >
+              <Edit2 className="h-4 w-4 text-cement-600" />
+            </Button>
+          )}
         </div>
       </div>
       <div className="mt-2 bg-amber-50 p-3 rounded-md flex items-start gap-2">

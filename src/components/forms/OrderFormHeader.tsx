@@ -7,9 +7,10 @@ import ChataCimentLogo from "../logo/ChataCimentLogo";
 interface OrderFormHeaderProps {
   availableQuantity: number;
   onUpdateQuantity: (newQuantity: number) => void;
+  isAdmin?: boolean;
 }
 
-const OrderFormHeader = ({ availableQuantity, onUpdateQuantity }: OrderFormHeaderProps) => {
+const OrderFormHeader = ({ availableQuantity, onUpdateQuantity, isAdmin = false }: OrderFormHeaderProps) => {
   return (
     <>
       <div className="flex items-center justify-center mb-4">
@@ -22,6 +23,7 @@ const OrderFormHeader = ({ availableQuantity, onUpdateQuantity }: OrderFormHeade
       <AvailabilityInfo 
         availableQuantity={availableQuantity}
         onUpdateQuantity={onUpdateQuantity}
+        isAdmin={isAdmin}
       />
     </>
   );

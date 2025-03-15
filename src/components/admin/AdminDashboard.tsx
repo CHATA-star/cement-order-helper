@@ -6,13 +6,28 @@ import OrderStats from "@/components/dashboard/OrderStats";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Settings, TrendingUp } from "lucide-react";
+import { User, Package, Settings, TrendingUp, ExternalLink } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [adminLink, setAdminLink] = useState("");
+
+  useEffect(() => {
+    // Générer le lien d'accès administrateur
+    const baseUrl = window.location.origin;
+    setAdminLink(`${baseUrl}/commande?adminToken=chata123`);
+  }, []);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(adminLink);
+    toast({
+      title: "Lien copié",
+      description: "Le lien d'accès administrateur a été copié dans le presse-papiers."
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -47,9 +62,28 @@ const AdminDashboard = () => {
                 les utilisateurs et configurer les paramètres du site.
               </p>
               
+              <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-200">
+                <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                  <ExternalLink className="h-5 w-5 text-amber-600" />
+                  Lien d'accès administrateur
+                </h3>
+                <p className="text-sm text-amber-700 mb-3">
+                  Ce lien vous permet d'accéder à la page de commande avec des droits d'administrateur pour modifier les statistiques et le stock.
+                </p>
+                <div className="flex gap-2">
+                  <Input value={adminLink} readOnly className="bg-white" />
+                  <Button onClick={copyToClipboard}>Copier</Button>
+                </div>
+                <div className="mt-2">
+                  <a href={adminLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" /> Ouvrir dans un nouvel onglet
+                  </a>
+                </div>
+              </div>
+              
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
-                <OrderStats />
+                <OrderStats isAdmin={true} />
               </div>
             </CardContent>
           </Card>

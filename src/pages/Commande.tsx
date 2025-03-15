@@ -1,5 +1,6 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CementOrderForm from "@/components/forms/CementOrderForm";
 import OrderStats from "@/components/dashboard/OrderStats";
@@ -8,6 +9,20 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Commande = () => {
+  const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    // Vérifier si l'URL contient un paramètre d'admin
+    const searchParams = new URLSearchParams(location.search);
+    const adminToken = searchParams.get('adminToken');
+    
+    // Vérifier si le token est valide (token très simple pour l'exemple)
+    if (adminToken === 'chata123') {
+      setIsAdmin(true);
+    }
+  }, [location]);
+
   return (
     <MainLayout>
       <div className="flex flex-col space-y-8">
@@ -20,9 +35,14 @@ const Commande = () => {
             Une solution simple et efficace pour vos commandes de ciment. 
             Remplissez le formulaire ci-dessous pour soumettre votre demande.
           </p>
+          {isAdmin && (
+            <div className="mt-2 bg-green-100 text-green-800 p-2 rounded-md inline-block">
+              ✓ Mode administrateur activé
+            </div>
+          )}
         </section>
 
-        <OrderStats />
+        <OrderStats isAdmin={isAdmin} />
 
         <section className="mb-12">
           <div className="grid md:grid-cols-4 gap-4 mb-10">
@@ -64,7 +84,7 @@ const Commande = () => {
             </div>
           </div>
 
-          <CementOrderForm />
+          <CementOrderForm isAdmin={isAdmin} />
           
           <div className="mt-12 text-center">
             <h3 className="text-xl font-semibold text-cement-700 mb-4">
