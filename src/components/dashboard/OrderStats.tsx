@@ -1,31 +1,57 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartPieIcon, TrendingUpIcon, Edit2Icon } from "lucide-react";
+import { Edit2Icon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { setWeeklyTotal, setMonthlyTotal } from "@/services/orderService";
+import { getWeeklyTotal, getMonthlyTotal, setWeeklyTotal as saveWeeklyTotal, setMonthlyTotal as saveMonthlyTotal } from "@/services/orderService";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderStatsProps {
   isAdmin?: boolean;
 }
 
 const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
+  const { toast } = useToast();
   const [isEditingWeekly, setIsEditingWeekly] = useState(false);
   const [isEditingMonthly, setIsEditingMonthly] = useState(false);
-  const [weeklyTotal, setWeeklyTotal] = useState(0);
-  const [monthlyTotal, setMonthlyTotal] = useState(0);
+  const [weeklyTotal, setWeeklyTotalState] = useState(0);
+  const [monthlyTotal, setMonthlyTotalState] = useState(0);
   const [tempWeekly, setTempWeekly] = useState(0);
   const [tempMonthly, setTempMonthly] = useState(0);
 
+  useEffect(() => {
+    // Charger les totaux depuis le localStorage ou le service
+    const loadTotals = () => {
+      const weekly = getWeeklyTotal();
+      const monthly = getMonthlyTotal();
+      setWeeklyTotalState(weekly);
+      setMonthlyTotalState(monthly);
+    };
+
+    loadTotals();
+  }, []);
+
   const handleSaveWeekly = () => {
-    setWeeklyTotal(tempWeekly);
+    saveWeeklyTotal(tempWeekly);
+    setWeeklyTotalState(tempWeekly);
     setIsEditingWeekly(false);
+    
+    toast({
+      title: "Statistique mise à jour",
+      description: "Le total hebdomadaire a été modifié avec succès.",
+    });
   };
 
   const handleSaveMonthly = () => {
-    setMonthlyTotal(tempMonthly);
+    saveMonthlyTotal(tempMonthly);
+    setMonthlyTotalState(tempMonthly);
     setIsEditingMonthly(false);
+    
+    toast({
+      title: "Statistique mise à jour",
+      description: "Le total mensuel a été modifié avec succès.",
+    });
   };
 
   return (

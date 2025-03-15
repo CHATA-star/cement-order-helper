@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +17,11 @@ interface OrderFormData {
   city: string;
 }
 
-const CementOrderForm = () => {
+interface CementOrderFormProps {
+  isAdmin?: boolean;
+}
+
+const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
   const [formData, setFormData] = useState<OrderFormData>({
     establishmentName: "",
     quantity: 0,
@@ -132,6 +137,7 @@ const CementOrderForm = () => {
         <OrderFormHeader 
           availableQuantity={availableQuantity}
           onUpdateQuantity={handleUpdateQuantity}
+          isAdmin={isAdmin}
         />
       </CardHeader>
       <form onSubmit={handleSubmit}>
