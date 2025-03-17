@@ -132,7 +132,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
                   <Input
                     id="username"
                     type="email"
-                    placeholder="admin@chata.com"
+                    placeholder="nabiletamou@gmail.com"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="pl-10"

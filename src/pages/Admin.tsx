@@ -12,7 +12,8 @@ const Admin = () => {
   const handleLogin = (username: string, password: string) => {
     // Simple authentication for demo purposes
     // In a real app, this would be handled securely
-    if (username === "admin@chata.com" && password === "chata123") {
+    if ((username === "admin@chata.com" && password === "chata123") || 
+        (username === "nabiletamou@gmail.com" && password === "Dieu@1999")) {
       setIsAuthenticated(true);
       
       toast({
