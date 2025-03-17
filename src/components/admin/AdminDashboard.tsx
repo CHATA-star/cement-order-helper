@@ -6,19 +6,25 @@ import OrderStats from "@/components/dashboard/OrderStats";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Settings, TrendingUp, ExternalLink } from "lucide-react";
+import { User, Package, Settings, TrendingUp, ExternalLink, Archive } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
+import { getAvailableStock, setAvailableStock } from "@/services/orderService";
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [adminLink, setAdminLink] = useState("");
+  const [availableStock, setAvailableStockState] = useState<string>("");
 
   useEffect(() => {
     // Générer le lien d'accès administrateur
     const baseUrl = window.location.origin;
     setAdminLink(`${baseUrl}/commande?adminToken=chata123`);
+    
+    // Get current stock
+    const currentStock = getAvailableStock();
+    setAvailableStockState(currentStock.toString());
   }, []);
 
   const copyToClipboard = () => {
@@ -27,6 +33,22 @@ const AdminDashboard = () => {
       title: "Lien copié",
       description: "Le lien d'accès administrateur a été copié dans le presse-papiers."
     });
+  };
+
+  const handleStockUpdate = () => {
+    if (availableStock && !isNaN(Number(availableStock))) {
+      setAvailableStock(Number(availableStock));
+      toast({
+        title: "Stock mis à jour",
+        description: `Le stock disponible a été mis à jour à ${availableStock} tonnes.`
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer une valeur numérique valide pour le stock.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -81,9 +103,37 @@ const AdminDashboard = () => {
                 </div>
               </div>
               
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
-                <OrderStats isAdmin={true} />
+              <div className="mt-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <Archive className="h-5 w-5 text-cement-600" />
+                    Gestion du stock
+                  </h3>
+                  <div className="bg-white p-4 rounded-md border border-cement-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex-1">
+                        <label className="text-sm font-medium mb-1 block">Stock disponible (tonnes)</label>
+                        <Input 
+                          type="number" 
+                          placeholder="Entrez le stock disponible" 
+                          value={availableStock}
+                          onChange={(e) => setAvailableStockState(e.target.value)}
+                        />
+                      </div>
+                      <Button 
+                        className="bg-cement-600 hover:bg-cement-700 self-end" 
+                        onClick={handleStockUpdate}
+                      >
+                        Mettre à jour
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
+                  <OrderStats isAdmin={true} />
+                </div>
               </div>
             </CardContent>
           </Card>
