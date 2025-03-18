@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, Edit2, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: number;
@@ -27,6 +28,7 @@ const getRegisteredUsers = (): User[] => {
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     // Récupérer les utilisateurs enregistrés
@@ -58,6 +60,12 @@ const UserManagement = () => {
       
       // Mettre à jour le localStorage
       localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+      
+      // Afficher une notification
+      toast({
+        title: "Utilisateur supprimé",
+        description: "L'utilisateur a été supprimé avec succès."
+      });
     }
   };
 

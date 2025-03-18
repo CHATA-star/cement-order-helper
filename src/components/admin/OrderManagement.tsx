@@ -4,8 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, FileText, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, FileText, CheckCircle, XCircle, Clock, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Type pour les commandes
+interface Order {
+  id: string;
+  client: string;
+  quantity: number;
+  date: string;
+  status: "completed" | "pending" | "cancelled";
+  city: string;
+}
 
 // Données simulées des commandes
 const mockOrders = [
@@ -44,8 +56,10 @@ const mockOrders = [
 ];
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const filteredOrders = orders.filter(
     (order) =>
@@ -82,12 +96,24 @@ const OrderManagement = () => {
     }
   };
 
-  const updateOrderStatus = (id: string, newStatus: string) => {
+  const updateOrderStatus = (id: string, newStatus: "completed" | "pending" | "cancelled") => {
     setOrders(
       orders.map((order) =>
         order.id === id ? { ...order, status: newStatus } : order
       )
     );
+    
+    setEditingOrderId(null);
+    
+    // Afficher une notification
+    toast({
+      title: "Statut modifié",
+      description: `La commande ${id} a été mise à jour avec succès.`
+    });
+  };
+
+  const toggleEditStatus = (id: string) => {
+    setEditingOrderId(editingOrderId === id ? null : id);
   };
 
   return (
@@ -134,10 +160,37 @@ const OrderManagement = () => {
                     <TableCell>{order.city}</TableCell>
                     <TableCell>{order.quantity} tonnes</TableCell>
                     <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{getStatusBadge(order.status)}</TableCell>
+                    <TableCell>
+                      {editingOrderId === order.id ? (
+                        <Select 
+                          defaultValue={order.status}
+                          onValueChange={(value) => updateOrderStatus(order.id, value as "completed" | "pending" | "cancelled")}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Changer le statut" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">En attente</SelectItem>
+                            <SelectItem value="completed">Livré</SelectItem>
+                            <SelectItem value="cancelled">Annulé</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        getStatusBadge(order.status)
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        {order.status === "pending" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toggleEditStatus(order.id)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          {editingOrderId === order.id ? "Annuler" : "Modifier statut"}
+                        </Button>
+                        
+                        {!editingOrderId && order.status === "pending" && (
                           <>
                             <Button 
                               variant="outline" 
@@ -146,7 +199,7 @@ const OrderManagement = () => {
                               onClick={() => updateOrderStatus(order.id, "completed")}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              Marquer livré
+                              Livré
                             </Button>
                             <Button 
                               variant="outline" 
@@ -158,28 +211,6 @@ const OrderManagement = () => {
                               Annuler
                             </Button>
                           </>
-                        )}
-                        {order.status === "completed" && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-amber-500 border-amber-500"
-                            onClick={() => updateOrderStatus(order.id, "pending")}
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            Remettre en attente
-                          </Button>
-                        )}
-                        {order.status === "cancelled" && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-amber-500 border-amber-500"
-                            onClick={() => updateOrderStatus(order.id, "pending")}
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            Réactiver
-                          </Button>
                         )}
                       </div>
                     </TableCell>
