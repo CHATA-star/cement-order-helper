@@ -8,6 +8,13 @@ import { Mail, User, Lock, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 
+interface RegisteredUser {
+  id: number;
+  name: string;
+  email: string;
+  date: string;
+}
+
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -49,18 +56,51 @@ const SignUpForm = () => {
       return;
     }
     
-    // Show success message and reset form
-    toast({
-      title: "Inscription réussie",
-      description: "Votre compte a été créé avec succès. Vous pouvez maintenant passer votre commande.",
-    });
-    
-    setIsSubmitted(true);
-    
-    // Rediriger vers la page de commande après 2 secondes
-    setTimeout(() => {
-      navigate('/commande');
-    }, 2000);
+    // Enregistrer l'utilisateur dans localStorage
+    try {
+      // Récupérer les utilisateurs existants
+      const existingUsersData = localStorage.getItem('registeredUsers');
+      const existingUsers: RegisteredUser[] = existingUsersData ? JSON.parse(existingUsersData) : [];
+      
+      // Générer un ID unique
+      const maxId = existingUsers.length > 0 
+        ? Math.max(...existingUsers.map(user => user.id)) 
+        : 0;
+      
+      // Créer le nouvel utilisateur
+      const newUser: RegisteredUser = {
+        id: maxId + 1,
+        name: name,
+        email: email,
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      // Ajouter l'utilisateur à la liste
+      const updatedUsers = [...existingUsers, newUser];
+      
+      // Enregistrer dans localStorage
+      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+      
+      // Show success message and reset form
+      toast({
+        title: "Inscription réussie",
+        description: "Votre compte a été créé avec succès. Vous pouvez maintenant passer votre commande.",
+      });
+      
+      setIsSubmitted(true);
+      
+      // Rediriger vers la page de commande après 2 secondes
+      setTimeout(() => {
+        navigate('/commande');
+      }, 2000);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement de l'utilisateur:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (isSubmitted) {

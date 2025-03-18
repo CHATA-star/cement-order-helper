@@ -1,21 +1,49 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, Edit2, Trash2 } from "lucide-react";
 
-// Données simulées des utilisateurs
-const mockUsers = [
-  { id: 1, name: "Jean Dupont", email: "jean@example.com", date: "2023-05-15" },
-  { id: 2, name: "Marie Claire", email: "marie@example.com", date: "2023-06-22" },
-  { id: 3, name: "Paul Martin", email: "paul@example.com", date: "2023-07-10" },
-];
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  date: string;
+}
+
+// Fonction pour récupérer les utilisateurs depuis le localStorage
+const getRegisteredUsers = (): User[] => {
+  try {
+    const usersData = localStorage.getItem('registeredUsers');
+    return usersData ? JSON.parse(usersData) : [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des utilisateurs:", error);
+    return [];
+  }
+};
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    // Récupérer les utilisateurs enregistrés
+    const registeredUsers = getRegisteredUsers();
+    
+    // Si aucun utilisateur n'est enregistré, utiliser les données simulées
+    if (registeredUsers.length === 0) {
+      const mockUsers = [
+        { id: 1, name: "Jean Dupont", email: "jean@example.com", date: "2023-05-15" },
+        { id: 2, name: "Marie Claire", email: "marie@example.com", date: "2023-06-22" },
+        { id: 3, name: "Paul Martin", email: "paul@example.com", date: "2023-07-10" },
+      ];
+      setUsers(mockUsers);
+    } else {
+      setUsers(registeredUsers);
+    }
+  }, []);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -25,7 +53,11 @@ const UserManagement = () => {
 
   const handleDeleteUser = (id: number) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-      setUsers(users.filter(user => user.id !== id));
+      const updatedUsers = users.filter(user => user.id !== id);
+      setUsers(updatedUsers);
+      
+      // Mettre à jour le localStorage
+      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
     }
   };
 
