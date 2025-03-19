@@ -16,11 +16,16 @@ const WHATSAPP_NUMBER = "0161080251";
 
 const WhatsAppSection = ({ formData }: WhatsAppSectionProps) => {
   const handleWhatsAppClick = () => {
+    if (!formData.phoneNumber) {
+      alert("Veuillez d'abord saisir votre numéro de téléphone");
+      return;
+    }
+    
     const message = `Bonjour, je souhaite commander du ciment.
     - Établissement: ${formData.establishmentName || "[Nom de l'établissement]"}
     - Quantité: ${formData.quantity || 0} tonnes
     - Ville de livraison: ${formData.city || "[Ville]"}
-    - Téléphone: ${formData.phoneNumber || "[Téléphone]"}`;
+    - Téléphone: ${formData.phoneNumber}`;
     
     const encodedMessage = encodeURIComponent(message);
     
@@ -43,6 +48,7 @@ const WhatsAppSection = ({ formData }: WhatsAppSectionProps) => {
             size="sm"
             className="mt-2 bg-green-100 border-green-200 hover:bg-green-200 text-green-800"
             onClick={handleWhatsAppClick}
+            disabled={!formData.phoneNumber}
           >
             <MessageSquare className="mr-1 h-4 w-4" />
             Commander par WhatsApp

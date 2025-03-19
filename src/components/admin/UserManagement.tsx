@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Edit2, Trash2 } from "lucide-react";
+import { Search, UserPlus, Edit2, Trash2, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface User {
@@ -12,6 +12,7 @@ interface User {
   name: string;
   email: string;
   date: string;
+  phoneNumber?: string; // Ajout du numéro de téléphone
 }
 
 // Fonction pour récupérer les utilisateurs depuis le localStorage
@@ -37,9 +38,9 @@ const UserManagement = () => {
     // Si aucun utilisateur n'est enregistré, utiliser les données simulées
     if (registeredUsers.length === 0) {
       const mockUsers = [
-        { id: 1, name: "Jean Dupont", email: "jean@example.com", date: "2023-05-15" },
-        { id: 2, name: "Marie Claire", email: "marie@example.com", date: "2023-06-22" },
-        { id: 3, name: "Paul Martin", email: "paul@example.com", date: "2023-07-10" },
+        { id: 1, name: "Jean Dupont", email: "jean@example.com", date: "2023-05-15", phoneNumber: "0123456789" },
+        { id: 2, name: "Marie Claire", email: "marie@example.com", date: "2023-06-22", phoneNumber: "0123456790" },
+        { id: 3, name: "Paul Martin", email: "paul@example.com", date: "2023-07-10", phoneNumber: "0123456791" },
       ];
       setUsers(mockUsers);
     } else {
@@ -50,7 +51,8 @@ const UserManagement = () => {
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.phoneNumber && user.phoneNumber.includes(searchTerm))
   );
 
   const handleDeleteUser = (id: number) => {
@@ -98,6 +100,7 @@ const UserManagement = () => {
                 <TableHead>ID</TableHead>
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Téléphone</TableHead>
                 <TableHead>Date d'inscription</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -109,6 +112,7 @@ const UserManagement = () => {
                     <TableCell className="font-medium">{user.id}</TableCell>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phoneNumber || "N/A"}</TableCell>
                     <TableCell>{new Date(user.date).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -129,7 +133,7 @@ const UserManagement = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
+                  <TableCell colSpan={6} className="text-center py-4">
                     Aucun utilisateur trouvé
                   </TableCell>
                 </TableRow>

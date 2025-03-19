@@ -13,11 +13,13 @@ interface RegisteredUser {
   name: string;
   email: string;
   date: string;
+  phoneNumber?: string; // Ajout du numéro de téléphone
 }
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState(""); // Nouveau champ pour le numéro de téléphone
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -29,7 +31,7 @@ const SignUpForm = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!email || !name || !password) {
+    if (!email || !name || !password || !phoneNumber) {
       toast({
         title: "Erreur de validation",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -72,6 +74,7 @@ const SignUpForm = () => {
         id: maxId + 1,
         name: name,
         email: email,
+        phoneNumber: phoneNumber, // Stockage du numéro de téléphone
         date: new Date().toISOString().split('T')[0]
       };
       
@@ -80,6 +83,13 @@ const SignUpForm = () => {
       
       // Enregistrer dans localStorage
       localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+      
+      // Store user's current session info
+      sessionStorage.setItem('currentUser', JSON.stringify({
+        name: name,
+        email: email,
+        phoneNumber: phoneNumber
+      }));
       
       // Show success message and reset form
       toast({
@@ -150,6 +160,24 @@ const SignUpForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="exemple@gmail.com"
+            className="pl-10"
+            required
+          />
+        </div>
+      </div>
+      
+      <div>
+        <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Mail className="h-4 w-4 text-cement-400" />
+          </div>
+          <Input
+            id="phoneNumber"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="0123456789"
             className="pl-10"
             required
           />

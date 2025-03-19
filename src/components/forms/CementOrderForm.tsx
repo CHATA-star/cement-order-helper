@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,12 @@ import OrderFormFields from "./OrderFormFields";
 import OrderFormHeader from "./OrderFormHeader";
 import WhatsAppSection from "./WhatsAppSection";
 import { MessageSquare } from "lucide-react";
+
+interface CurrentUser {
+  name?: string;
+  email?: string;
+  phoneNumber?: string;
+}
 
 interface OrderFormData {
   establishmentName: string;
@@ -34,6 +40,23 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
   const { toast } = useToast();
   
   const WHATSAPP_NUMBER = "0161080251";
+
+  // Récupérer les informations de l'utilisateur connecté
+  useEffect(() => {
+    const currentUserData = sessionStorage.getItem('currentUser');
+    if (currentUserData) {
+      try {
+        const userData: CurrentUser = JSON.parse(currentUserData);
+        setFormData(prev => ({
+          ...prev,
+          establishmentName: userData.name || prev.establishmentName,
+          phoneNumber: userData.phoneNumber || prev.phoneNumber
+        }));
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données utilisateur:", error);
+      }
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
