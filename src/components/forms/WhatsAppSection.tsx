@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface WhatsAppSectionProps {
   formData: {
@@ -15,18 +16,19 @@ interface WhatsAppSectionProps {
 const WHATSAPP_NUMBER = "0161080251";
 
 const WhatsAppSection = ({ formData }: WhatsAppSectionProps) => {
+  const { toast } = useToast();
+  
   const handleWhatsAppClick = () => {
     if (!formData.phoneNumber) {
-      alert("Veuillez d'abord saisir votre numéro de téléphone");
+      toast({
+        title: "Numéro manquant",
+        description: "Veuillez d'abord saisir votre numéro de téléphone",
+        variant: "destructive"
+      });
       return;
     }
     
-    const message = `Bonjour, je souhaite commander du ciment.
-    - Établissement: ${formData.establishmentName || "[Nom de l'établissement]"}
-    - Quantité: ${formData.quantity || 0} tonnes
-    - Ville de livraison: ${formData.city || "[Ville]"}
-    - Téléphone: ${formData.phoneNumber}`;
-    
+    const message = createWhatsAppMessage(formData);
     const encodedMessage = encodeURIComponent(message);
     
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
@@ -57,6 +59,15 @@ const WhatsAppSection = ({ formData }: WhatsAppSectionProps) => {
       </div>
     </div>
   );
+};
+
+// Separate function for creating the WhatsApp message
+const createWhatsAppMessage = (formData: WhatsAppSectionProps["formData"]) => {
+  return `Bonjour, je souhaite commander du ciment.
+    - Établissement: ${formData.establishmentName || "[Nom de l'établissement]"}
+    - Quantité: ${formData.quantity || 0} tonnes
+    - Ville de livraison: ${formData.city || "[Ville]"}
+    - Téléphone: ${formData.phoneNumber}`;
 };
 
 export default WhatsAppSection;
