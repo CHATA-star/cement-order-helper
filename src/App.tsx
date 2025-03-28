@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Reviews from "./pages/Reviews";
 import Admin from "./pages/Admin";
 import { syncLocalUsersToSupabase } from "./services/userService";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -31,8 +32,22 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/commande" element={<Commande />} />
-            <Route path="/confirmation" element={<Confirmation />} />
+            <Route 
+              path="/commande" 
+              element={
+                <ProtectedRoute>
+                  <Commande />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/confirmation" 
+              element={
+                <ProtectedRoute>
+                  <Confirmation />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
