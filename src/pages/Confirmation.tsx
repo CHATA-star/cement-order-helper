@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, MessageSquare, Clock } from "lucide-react";
+import { CheckCircle2, MessageSquare, Clock, FileText } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 
 interface OrderDetails {
@@ -12,10 +13,12 @@ interface OrderDetails {
   city: string;
 }
 
-const WHATSAPP_NUMBER = "0161080251";
+// Updated with international format
+const WHATSAPP_NUMBER = "+2290161080251";
 
 const Confirmation = () => {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +26,8 @@ const Confirmation = () => {
     
     if (storedOrder) {
       setOrderDetails(JSON.parse(storedOrder));
+      // Generate a random order number
+      setOrderNumber(`CMD-${Math.floor(100000 + Math.random() * 900000)}`);
     } else {
       navigate("/");
     }
@@ -35,6 +40,7 @@ const Confirmation = () => {
 
   const handleWhatsAppContact = () => {
     const message = `Bonjour, je voudrais suivre le statut de ma commande de ciment:
+    - N° de commande: ${orderNumber}
     - Établissement: ${orderDetails?.establishmentName}
     - Quantité: ${orderDetails?.quantity} tonnes
     - Ville de livraison: ${orderDetails?.city}
@@ -43,7 +49,11 @@ const Confirmation = () => {
     
     const encodedMessage = encodeURIComponent(message);
     
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodedMessage}`, '_blank');
+  };
+  
+  const handlePrint = () => {
+    window.print();
   };
 
   if (!orderDetails) {
@@ -59,7 +69,7 @@ const Confirmation = () => {
   return (
     <MainLayout>
       <div className="max-w-lg mx-auto">
-        <Card className="border-cement-200 shadow-lg">
+        <Card className="border-cement-200 shadow-lg print:shadow-none print:border-none">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-4">
               <CheckCircle2 className="h-16 w-16 text-green-500" />
@@ -70,7 +80,17 @@ const Confirmation = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-cement-50 p-4 rounded-md border border-cement-100">
+            <div className="bg-cement-50 p-4 rounded-md border border-cement-100 print:border-gray-300">
+              <div className="flex justify-between mb-3">
+                <div>
+                  <span className="text-sm text-cement-600">N° de commande:</span>
+                  <p className="font-medium">{orderNumber}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-cement-600">Date:</span>
+                  <p className="font-medium">{new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
               <h3 className="font-medium text-cement-700 mb-2">Détails de la commande :</h3>
               <ul className="space-y-2">
                 <li className="flex justify-between">
@@ -89,24 +109,7 @@ const Confirmation = () => {
                   <span className="text-cement-600">Téléphone :</span>
                   <span className="font-medium">{orderDetails.phoneNumber}</span>
                 </li>
-                <li className="flex justify-between">
-                  <span className="text-cement-600">Date de demande :</span>
-                  <span className="font-medium">{new Date().toLocaleDateString()}</span>
-                </li>
               </ul>
-            </div>
-            
-            <div className="bg-amber-50 p-3 rounded-md border border-amber-100">
-              <div className="flex items-start gap-2">
-                <Clock className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800">Délai de livraison</p>
-                  <p className="text-xs text-amber-700 mt-1">
-                    Votre commande sera livrée dans un délai minimum de 24h et maximum de 72h 
-                    après confirmation par notre équipe commerciale.
-                  </p>
-                </div>
-              </div>
             </div>
             
             <p className="text-center text-sm text-cement-500">
@@ -135,12 +138,20 @@ const Confirmation = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center">
+          <CardFooter className="flex justify-between print:hidden">
             <Button 
               onClick={handleNewOrder}
               className="bg-cement-600 hover:bg-cement-700 text-white"
             >
               Nouvelle Commande
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handlePrint}
+              className="border-cement-200"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Imprimer / Télécharger
             </Button>
           </CardFooter>
         </Card>
