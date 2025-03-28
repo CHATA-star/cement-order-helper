@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
@@ -7,17 +8,30 @@ export interface RegisteredUser {
   date: string;
   phoneNumber?: string;
   name?: string;
+  password?: string;
 }
 
 export const registerUser = async (
   email: string,
   phoneNumber: string,
-  name?: string
+  name?: string,
+  password?: string
 ): Promise<boolean> => {
   try {
     // Save user to localStorage
     const existingUsersData = localStorage.getItem('registeredUsers');
     const existingUsers: RegisteredUser[] = existingUsersData ? JSON.parse(existingUsersData) : [];
+    
+    // Vérifier si l'email existe déjà
+    const existingUser = existingUsers.find(user => user.email === email);
+    if (existingUser) {
+      toast({
+        title: "Erreur",
+        description: "Cette adresse email est déjà utilisée. Veuillez vous connecter.",
+        variant: "destructive"
+      });
+      return false;
+    }
     
     const maxId = existingUsers.length > 0 
       ? Math.max(...existingUsers.map(user => user.id)) 
@@ -30,6 +44,7 @@ export const registerUser = async (
       email: email,
       phoneNumber: phoneNumber,
       name: name,
+      password: password,
       date: currentDate
     };
     
@@ -91,6 +106,77 @@ export const registerUser = async (
     toast({
       title: "Erreur",
       description: "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.",
+      variant: "destructive"
+    });
+    return false;
+  }
+};
+
+export const loginUser = async (
+  email: string,
+  password: string
+): Promise<boolean> => {
+  try {
+    // Récupérer les utilisateurs du localStorage
+    const existingUsersData = localStorage.getItem('registeredUsers');
+    
+    if (!existingUsersData) {
+      toast({
+        title: "Erreur",
+        description: "Aucun utilisateur trouvé. Veuillez créer un compte.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    const existingUsers: RegisteredUser[] = JSON.parse(existingUsersData);
+    
+    // Rechercher l'utilisateur par email
+    const user = existingUsers.find(user => user.email === email);
+    
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Adresse email non trouvée. Veuillez vérifier vos identifiants.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    // Vérifier le mot de passe (dans un environnement réel, nous utiliserions une méthode sécurisée)
+    if (user.password && user.password !== password) {
+      toast({
+        title: "Erreur",
+        description: "Mot de passe incorrect. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    // Stocker les informations de l'utilisateur dans la session
+    localStorage.setItem('currentUser', JSON.stringify({
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      name: user.name
+    }));
+    
+    sessionStorage.setItem('currentUser', JSON.stringify({
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      name: user.name
+    }));
+    
+    toast({
+      title: "Connexion réussie",
+      description: "Vous êtes maintenant connecté. Vous pouvez passer votre commande.",
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la connexion:", error);
+    toast({
+      title: "Erreur",
+      description: "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
       variant: "destructive"
     });
     return false;

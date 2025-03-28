@@ -41,7 +41,7 @@ const Index = () => {
             
             <div className="text-center mt-6">
               <p className="text-green-500 text-sm">
-                Déjà inscrit ? <Link to="/commande" className="text-green-700 font-medium hover:underline inline-flex items-center"><LogIn className="h-3 w-3 mr-1" /> Connectez-vous et commandez</Link>
+                Déjà inscrit ? <Link to="/login" className="text-green-700 font-medium hover:underline inline-flex items-center"><LogIn className="h-3 w-3 mr-1" /> Connectez-vous</Link>
               </p>
             </div>
           </div>

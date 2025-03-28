@@ -48,8 +48,8 @@ const SignUpForm = () => {
       return;
     }
     
-    // Register user with name
-    const success = await registerUser(email, phoneNumber, name);
+    // Register user with name and password
+    const success = await registerUser(email, phoneNumber, name, password);
     
     if (success) {
       setIsSubmitted(true);
