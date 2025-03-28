@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
@@ -7,11 +6,13 @@ export interface RegisteredUser {
   email: string;
   date: string;
   phoneNumber?: string;
+  name?: string;
 }
 
 export const registerUser = async (
   email: string,
-  phoneNumber: string
+  phoneNumber: string,
+  name?: string
 ): Promise<boolean> => {
   try {
     // Save user to localStorage
@@ -28,16 +29,25 @@ export const registerUser = async (
       id: maxId + 1,
       email: email,
       phoneNumber: phoneNumber,
+      name: name,
       date: currentDate
     };
     
     const updatedUsers = [...existingUsers, newUser];
     localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
     
-    // Store user's current session info
+    // Store user's session info more persistently
+    localStorage.setItem('currentUser', JSON.stringify({
+      email: email,
+      phoneNumber: phoneNumber,
+      name: name
+    }));
+    
+    // Also keep in sessionStorage for current session
     sessionStorage.setItem('currentUser', JSON.stringify({
       email: email,
-      phoneNumber: phoneNumber
+      phoneNumber: phoneNumber,
+      name: name
     }));
     
     // Try to save user to Supabase if it's configured
@@ -48,6 +58,7 @@ export const registerUser = async (
           {
             email: email,
             phone_number: phoneNumber,
+            name: name,
             registration_date: currentDate,
           }
         ]);
@@ -84,4 +95,34 @@ export const registerUser = async (
     });
     return false;
   }
+};
+
+export const getCurrentUser = () => {
+  // First check sessionStorage (current session)
+  const sessionUser = sessionStorage.getItem('currentUser');
+  if (sessionUser) {
+    return JSON.parse(sessionUser);
+  }
+  
+  // If not in session, check localStorage (persistent)
+  const localUser = localStorage.getItem('currentUser');
+  if (localUser) {
+    // Also set in sessionStorage for this session
+    sessionStorage.setItem('currentUser', localUser);
+    return JSON.parse(localUser);
+  }
+  
+  return null;
+};
+
+export const logoutUser = () => {
+  sessionStorage.removeItem('currentUser');
+  localStorage.removeItem('currentUser');
+  
+  toast({
+    title: "Déconnexion réussie",
+    description: "Vous avez été déconnecté avec succès.",
+  });
+  
+  return true;
 };

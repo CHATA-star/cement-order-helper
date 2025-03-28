@@ -1,14 +1,15 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import FormFields from "./signup/FormFields";
 import TermsAndConditions from "./signup/TermsAndConditions";
 import SuccessMessage from "./signup/SuccessMessage";
 import { validateSignUpForm, showValidationError } from "@/utils/formValidation";
-import { registerUser } from "@/services/registrationService";
+import { registerUser, getCurrentUser } from "@/services/registrationService";
 
 const SignUpForm = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +18,15 @@ const SignUpForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      // If user is already logged in, redirect to order page
+      navigate('/commande');
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +38,8 @@ const SignUpForm = () => {
       phoneNumber, 
       password, 
       confirmPassword, 
-      acceptTerms
+      acceptTerms,
+      name
     );
     
     if (!validation.isValid) {
@@ -37,8 +48,8 @@ const SignUpForm = () => {
       return;
     }
     
-    // Register user
-    const success = await registerUser(email, phoneNumber);
+    // Register user with name
+    const success = await registerUser(email, phoneNumber, name);
     
     if (success) {
       setIsSubmitted(true);
@@ -67,6 +78,8 @@ const SignUpForm = () => {
         setPassword={setPassword}
         confirmPassword={confirmPassword}
         setConfirmPassword={setConfirmPassword}
+        name={name}
+        setName={setName}
       />
 
       <TermsAndConditions

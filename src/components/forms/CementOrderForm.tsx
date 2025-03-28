@@ -8,6 +8,7 @@ import OrderFormFields from "./OrderFormFields";
 import OrderFormHeader from "./OrderFormHeader";
 import WhatsAppSection from "./WhatsAppSection";
 import { MessageSquare } from "lucide-react";
+import { getCurrentUser } from "@/services/registrationService";
 
 interface CurrentUser {
   name?: string;
@@ -41,20 +42,17 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
   // Updated with international format
   const WHATSAPP_NUMBER = "+2290161080251";
 
-  // Récupérer les informations de l'utilisateur connecté
+  // Récupérer les informations de l'utilisateur connecté - check both localStorage and sessionStorage
   useEffect(() => {
-    const currentUserData = sessionStorage.getItem('currentUser');
-    if (currentUserData) {
-      try {
-        const userData: CurrentUser = JSON.parse(currentUserData);
-        setFormData(prev => ({
-          ...prev,
-          establishmentName: userData.name || prev.establishmentName,
-          phoneNumber: userData.phoneNumber || prev.phoneNumber
-        }));
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données utilisateur:", error);
-      }
+    // Try to get user from session or local storage
+    const currentUser = getCurrentUser();
+    
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        establishmentName: currentUser.name || prev.establishmentName,
+        phoneNumber: currentUser.phoneNumber || prev.phoneNumber
+      }));
     }
   }, []);
 

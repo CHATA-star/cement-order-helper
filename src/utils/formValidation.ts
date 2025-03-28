@@ -11,13 +11,22 @@ export const validateSignUpForm = (
   phoneNumber: string,
   password: string,
   confirmPassword: string,
-  acceptTerms: boolean
+  acceptTerms: boolean,
+  name?: string
 ): ValidationResult => {
   // Check required fields
   if (!email || !password || !phoneNumber) {
     return {
       isValid: false,
       errorMessage: "Veuillez remplir tous les champs obligatoires."
+    };
+  }
+  
+  // Check name if required
+  if (name !== undefined && !name.trim()) {
+    return {
+      isValid: false,
+      errorMessage: "Veuillez saisir le nom de votre établissement."
     };
   }
   
