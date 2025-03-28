@@ -73,33 +73,57 @@ const AdminDashboard = () => {
               
               <div className="mt-6 space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                    <Archive className="h-5 w-5 text-cement-600" />
-                    Gestion du stock
-                  </h3>
-                  <div className="bg-white p-4 rounded-md border border-cement-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex-1">
-                        <label className="text-sm font-medium mb-1 block">Stock disponible (tonnes)</label>
-                        <Input 
-                          type="number" 
-                          placeholder="Entrez le stock disponible" 
-                          value={availableStock}
-                          onChange={(e) => setAvailableStockState(e.target.value)}
-                        />
-                      </div>
-                      <Button 
-                        className="bg-cement-600 hover:bg-cement-700 self-end" 
-                        onClick={handleStockUpdate}
-                      >
-                        Mettre à jour
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
                   <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    {/* Commandes de la semaine */}
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{getAvailableStock()} tonnes</div>
+                        <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Stock disponible actuellement */}
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Stock disponible</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-col gap-2">
+                          <Input 
+                            type="number" 
+                            placeholder="Entrez le stock disponible" 
+                            value={availableStock}
+                            onChange={(e) => setAvailableStockState(e.target.value)}
+                            className="text-md font-medium"
+                          />
+                          <Button 
+                            className="bg-cement-600 hover:bg-cement-700 w-full" 
+                            onClick={handleStockUpdate}
+                            size="sm"
+                          >
+                            Mettre à jour
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Commandes du mois */}
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{getAvailableStock() * 4} tonnes</div>
+                        <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
                   <OrderStats isAdmin={true} />
                 </div>
               </div>
@@ -157,3 +181,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
