@@ -39,7 +39,8 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const WHATSAPP_NUMBER = "0161080251";
+  // Updated with international format
+  const WHATSAPP_NUMBER = "+2290161080251";
 
   // Récupérer les informations de l'utilisateur connecté
   useEffect(() => {
@@ -150,8 +151,8 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     addOrder(formData);
     sessionStorage.setItem("cementOrder", JSON.stringify(formData));
     
-    // Open WhatsApp in a new tab
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+    // Open WhatsApp in a new tab with updated number format
+    window.open(`https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodedMessage}`, '_blank');
   };
 
   return (
