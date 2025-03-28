@@ -40,23 +40,32 @@ export const registerUser = async (
       phoneNumber: phoneNumber
     }));
     
-    // Save user to Supabase
-    const { error } = await supabase
-      .from('registered_users')
-      .insert([
-        {
-          email: email,
-          phone_number: phoneNumber,
-          registration_date: currentDate,
-        }
-      ]);
-      
-    if (error) {
-      console.error("Erreur Supabase:", error);
-      // Continue even if Supabase fails, as user is saved locally
+    // Try to save user to Supabase if it's configured
+    try {
+      const { error } = await supabase
+        .from('registered_users')
+        .insert([
+          {
+            email: email,
+            phone_number: phoneNumber,
+            registration_date: currentDate,
+          }
+        ]);
+        
+      if (error) {
+        console.error("Erreur Supabase:", error);
+        // Continue even if Supabase fails, as user is saved locally
+        toast({
+          title: "Avertissement",
+          description: "Inscription réussie, mais une erreur de synchronisation est survenue.",
+        });
+      }
+    } catch (supabaseError) {
+      console.error("Erreur de connexion Supabase:", supabaseError);
+      // This catch specifically handles Supabase connection errors
       toast({
         title: "Avertissement",
-        description: "Inscription réussie, mais une erreur de synchronisation est survenue.",
+        description: "Inscription réussie, mais le service de synchronisation est indisponible.",
       });
     }
     
