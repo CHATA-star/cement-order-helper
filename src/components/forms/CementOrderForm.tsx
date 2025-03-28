@@ -161,6 +161,7 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
           availableQuantity={availableQuantity}
           onUpdateQuantity={handleUpdateQuantity}
           isAdmin={isAdmin}
+          displayAvailabilityInfo={false}
         />
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -169,6 +170,9 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
             formData={formData}
             availableQuantity={availableQuantity}
             handleChange={handleChange}
+            displayAvailabilityInfo={true}
+            onUpdateQuantity={handleUpdateQuantity}
+            isAdmin={isAdmin}
           />
           <WhatsAppSection formData={formData} />
         </CardContent>

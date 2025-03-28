@@ -8,9 +8,15 @@ interface OrderFormHeaderProps {
   availableQuantity: number;
   onUpdateQuantity: (newQuantity: number) => void;
   isAdmin?: boolean;
+  displayAvailabilityInfo?: boolean;
 }
 
-const OrderFormHeader = ({ availableQuantity, onUpdateQuantity, isAdmin = false }: OrderFormHeaderProps) => {
+const OrderFormHeader = ({ 
+  availableQuantity, 
+  onUpdateQuantity, 
+  isAdmin = false,
+  displayAvailabilityInfo = true
+}: OrderFormHeaderProps) => {
   return (
     <>
       <div className="flex items-center justify-center mb-4">
@@ -20,11 +26,13 @@ const OrderFormHeader = ({ availableQuantity, onUpdateQuantity, isAdmin = false 
       <CardDescription className="text-center">
         Entrez les informations nécessaires pour votre commande
       </CardDescription>
-      <AvailabilityInfo 
-        availableQuantity={availableQuantity}
-        onUpdateQuantity={onUpdateQuantity}
-        isAdmin={isAdmin}
-      />
+      {displayAvailabilityInfo && (
+        <AvailabilityInfo 
+          availableQuantity={availableQuantity}
+          onUpdateQuantity={onUpdateQuantity}
+          isAdmin={isAdmin}
+        />
+      )}
     </>
   );
 };

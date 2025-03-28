@@ -3,6 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building, Truck, Phone, MapPin } from "lucide-react";
+import AvailabilityInfo from "./AvailabilityInfo";
 
 interface OrderFormFieldsProps {
   formData: {
@@ -13,9 +14,19 @@ interface OrderFormFieldsProps {
   };
   availableQuantity: number;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  displayAvailabilityInfo?: boolean;
+  onUpdateQuantity?: (newQuantity: number) => void;
+  isAdmin?: boolean;
 }
 
-const OrderFormFields = ({ formData, availableQuantity, handleChange }: OrderFormFieldsProps) => {
+const OrderFormFields = ({ 
+  formData, 
+  availableQuantity, 
+  handleChange,
+  displayAvailabilityInfo = false,
+  onUpdateQuantity = () => {},
+  isAdmin = false
+}: OrderFormFieldsProps) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -50,6 +61,17 @@ const OrderFormFields = ({ formData, availableQuantity, handleChange }: OrderFor
           className="w-full"
         />
       </div>
+
+      {/* Display availability info between quantity and city */}
+      {displayAvailabilityInfo && (
+        <div className="my-4">
+          <AvailabilityInfo 
+            availableQuantity={availableQuantity}
+            onUpdateQuantity={onUpdateQuantity}
+            isAdmin={isAdmin}
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
