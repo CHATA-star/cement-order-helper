@@ -4,22 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, User, Lock, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 
 interface RegisteredUser {
   id: number;
-  name: string;
   email: string;
   date: string;
-  phoneNumber?: string; // Ajout du numéro de téléphone
+  phoneNumber?: string;
 }
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState(""); // Nouveau champ pour le numéro de téléphone
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -31,7 +29,7 @@ const SignUpForm = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!email || !name || !password || !phoneNumber) {
+    if (!email || !password || !phoneNumber) {
       toast({
         title: "Erreur de validation",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -72,9 +70,8 @@ const SignUpForm = () => {
       // Créer le nouvel utilisateur
       const newUser: RegisteredUser = {
         id: maxId + 1,
-        name: name,
         email: email,
-        phoneNumber: phoneNumber, // Stockage du numéro de téléphone
+        phoneNumber: phoneNumber,
         date: new Date().toISOString().split('T')[0]
       };
       
@@ -86,7 +83,6 @@ const SignUpForm = () => {
       
       // Store user's current session info
       sessionStorage.setItem('currentUser', JSON.stringify({
-        name: name,
         email: email,
         phoneNumber: phoneNumber
       }));
@@ -131,23 +127,6 @@ const SignUpForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="name">Nom complet</Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <User className="h-4 w-4 text-cement-400" />
-          </div>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Jean Dupont"
-            className="pl-10"
-            required
-          />
-        </div>
-      </div>
-
       <div>
         <Label htmlFor="email">Adresse email</Label>
         <div className="relative">
