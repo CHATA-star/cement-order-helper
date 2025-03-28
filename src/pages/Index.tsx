@@ -46,19 +46,6 @@ const Index = () => {
             </div>
           </div>
         </section>
-
-        {/* Next Steps Section */}
-        <section className="text-center max-w-3xl mx-auto">
-          <h2 className="text-xl font-semibold text-cement-700 mb-4">
-            Une fois inscrit, vous pourrez passer votre commande
-          </h2>
-          <p className="text-cement-600 mb-6">
-            Après avoir créé votre compte, vous serez dirigé vers notre plateforme de commande où vous pourrez commander du ciment facilement.
-          </p>
-          <Link to="/commande" className="bg-cement-700 hover:bg-cement-800 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-colors">
-            Aller directement à la page de commande
-          </Link>
-        </section>
       </div>
     </MainLayout>
   );
