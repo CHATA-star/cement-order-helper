@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Order, mockOrders } from "@/types/order";
 import OrderSearch from "./orders/OrderSearch";
 import OrdersTable from "./orders/OrdersTable";
+import { supabase } from "@/lib/supabase";
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
@@ -22,13 +23,32 @@ const OrderManagement = () => {
   );
 
   const updateOrderStatus = (id: string, newStatus: "completed" | "pending" | "cancelled") => {
+    // Mettre à jour l'état local
     setOrders(
       orders.map((order) =>
         order.id === id ? { ...order, status: newStatus } : order
       )
     );
     
+    // Réinitialiser l'état d'édition
     setEditingOrderId(null);
+    
+    // Essayer de mettre à jour dans Supabase si disponible
+    try {
+      supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', id)
+        .then(({ error }) => {
+          if (error) {
+            console.warn("Impossible de mettre à jour la commande dans Supabase:", error.message);
+            // Continuons sans perturber l'expérience utilisateur
+          }
+        });
+    } catch (error) {
+      console.warn("Erreur lors de la tentative de mise à jour dans Supabase:", error);
+      // Pas de traitement particulier car nous avons déjà mis à jour l'état local
+    }
     
     // Afficher une notification
     toast({

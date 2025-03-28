@@ -5,6 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Order } from "@/types/order";
 import OrderStatusBadge from "./OrderStatusBadge";
 import OrderActions from "./OrderActions";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -29,7 +32,7 @@ const OrdersTable = ({
             <TableHead>Ville</TableHead>
             <TableHead>Quantité</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead>Statut</TableHead>
+            <TableHead className="w-[180px]">Statut</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -51,14 +54,16 @@ const OrdersTable = ({
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Changer le statut" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         <SelectItem value="pending">En attente</SelectItem>
                         <SelectItem value="completed">Livré</SelectItem>
                         <SelectItem value="cancelled">Annulé</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
-                    <OrderStatusBadge status={order.status} />
+                    <div onClick={() => toggleEditStatus(order.id)} className="cursor-pointer">
+                      <OrderStatusBadge status={order.status} />
+                    </div>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
