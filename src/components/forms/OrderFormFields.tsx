@@ -62,13 +62,14 @@ const OrderFormFields = ({
         />
       </div>
 
-      {/* Display availability info between quantity and city */}
-      {displayAvailabilityInfo && (
+      {/* Only display availability info for admin users */}
+      {isAdmin && displayAvailabilityInfo && (
         <div className="my-4">
           <AvailabilityInfo 
             availableQuantity={availableQuantity}
             onUpdateQuantity={onUpdateQuantity}
             isAdmin={isAdmin}
+            showDeliveryTime={false}
           />
         </div>
       )}
