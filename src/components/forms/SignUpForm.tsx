@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 interface RegisteredUser {
   id: number;
@@ -22,11 +23,13 @@ const SignUpForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     // Basic validation
     if (!email || !password || !phoneNumber) {
@@ -35,6 +38,7 @@ const SignUpForm = () => {
         description: "Veuillez remplir tous les champs obligatoires.",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
     
@@ -44,6 +48,7 @@ const SignUpForm = () => {
         description: "Les mots de passe ne correspondent pas.",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
     
@@ -53,32 +58,29 @@ const SignUpForm = () => {
         description: "Veuillez accepter les conditions d'utilisation pour continuer.",
         variant: "destructive"
       });
+      setIsLoading(false);
       return;
     }
     
-    // Enregistrer l'utilisateur dans localStorage
     try {
-      // Récupérer les utilisateurs existants
+      // Sauvegarder dans localStorage (conserver la fonctionnalité existante)
       const existingUsersData = localStorage.getItem('registeredUsers');
       const existingUsers: RegisteredUser[] = existingUsersData ? JSON.parse(existingUsersData) : [];
       
-      // Générer un ID unique
       const maxId = existingUsers.length > 0 
         ? Math.max(...existingUsers.map(user => user.id)) 
         : 0;
       
-      // Créer le nouvel utilisateur
+      const currentDate = new Date().toISOString().split('T')[0];
+      
       const newUser: RegisteredUser = {
         id: maxId + 1,
         email: email,
         phoneNumber: phoneNumber,
-        date: new Date().toISOString().split('T')[0]
+        date: currentDate
       };
       
-      // Ajouter l'utilisateur à la liste
       const updatedUsers = [...existingUsers, newUser];
-      
-      // Enregistrer dans localStorage
       localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
       
       // Store user's current session info
@@ -86,6 +88,28 @@ const SignUpForm = () => {
         email: email,
         phoneNumber: phoneNumber
       }));
+      
+      // Sauvegarder dans Supabase
+      const { error } = await supabase
+        .from('registered_users')
+        .insert([
+          {
+            email: email,
+            phone_number: phoneNumber,
+            registration_date: currentDate,
+            // NOTE: We don't store the password in the database for security
+            // In a real app, you'd use Supabase Auth for handling authentication
+          }
+        ]);
+        
+      if (error) {
+        console.error("Erreur Supabase:", error);
+        // On continue même en cas d'erreur Supabase, car l'utilisateur est déjà enregistré localement
+        toast({
+          title: "Avertissement",
+          description: "Inscription réussie, mais une erreur de synchronisation est survenue.",
+        });
+      }
       
       // Show success message and reset form
       toast({
@@ -106,6 +130,8 @@ const SignUpForm = () => {
         description: "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -213,8 +239,9 @@ const SignUpForm = () => {
       <Button 
         type="submit" 
         className="w-full bg-cement-600 hover:bg-cement-700"
+        disabled={isLoading}
       >
-        Créer un compte
+        {isLoading ? 'Création en cours...' : 'Créer un compte'}
       </Button>
     </form>
   );
