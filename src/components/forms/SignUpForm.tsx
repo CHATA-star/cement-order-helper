@@ -1,20 +1,12 @@
 
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, CheckCircle2 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-
-interface RegisteredUser {
-  id: number;
-  email: string;
-  date: string;
-  phoneNumber?: string;
-}
+import FormFields from "./signup/FormFields";
+import TermsAndConditions from "./signup/TermsAndConditions";
+import SuccessMessage from "./signup/SuccessMessage";
+import { validateSignUpForm, showValidationError } from "@/utils/formValidation";
+import { registerUser } from "@/services/registrationService";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -24,217 +16,63 @@ const SignUpForm = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Basic validation
-    if (!email || !password || !phoneNumber) {
-      toast({
-        title: "Erreur de validation",
-        description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive"
-      });
+    // Validate form
+    const validation = validateSignUpForm(
+      email, 
+      phoneNumber, 
+      password, 
+      confirmPassword, 
+      acceptTerms
+    );
+    
+    if (!validation.isValid) {
+      showValidationError(validation.errorMessage || "Erreur de validation");
       setIsLoading(false);
       return;
     }
     
-    if (password !== confirmPassword) {
-      toast({
-        title: "Erreur de validation",
-        description: "Les mots de passe ne correspondent pas.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-      return;
-    }
+    // Register user
+    const success = await registerUser(email, phoneNumber);
     
-    if (!acceptTerms) {
-      toast({
-        title: "Conditions d'utilisation",
-        description: "Veuillez accepter les conditions d'utilisation pour continuer.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-      return;
-    }
-    
-    try {
-      // Sauvegarder dans localStorage (conserver la fonctionnalité existante)
-      const existingUsersData = localStorage.getItem('registeredUsers');
-      const existingUsers: RegisteredUser[] = existingUsersData ? JSON.parse(existingUsersData) : [];
-      
-      const maxId = existingUsers.length > 0 
-        ? Math.max(...existingUsers.map(user => user.id)) 
-        : 0;
-      
-      const currentDate = new Date().toISOString().split('T')[0];
-      
-      const newUser: RegisteredUser = {
-        id: maxId + 1,
-        email: email,
-        phoneNumber: phoneNumber,
-        date: currentDate
-      };
-      
-      const updatedUsers = [...existingUsers, newUser];
-      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-      
-      // Store user's current session info
-      sessionStorage.setItem('currentUser', JSON.stringify({
-        email: email,
-        phoneNumber: phoneNumber
-      }));
-      
-      // Sauvegarder dans Supabase
-      const { error } = await supabase
-        .from('registered_users')
-        .insert([
-          {
-            email: email,
-            phone_number: phoneNumber,
-            registration_date: currentDate,
-            // NOTE: We don't store the password in the database for security
-            // In a real app, you'd use Supabase Auth for handling authentication
-          }
-        ]);
-        
-      if (error) {
-        console.error("Erreur Supabase:", error);
-        // On continue même en cas d'erreur Supabase, car l'utilisateur est déjà enregistré localement
-        toast({
-          title: "Avertissement",
-          description: "Inscription réussie, mais une erreur de synchronisation est survenue.",
-        });
-      }
-      
-      // Show success message and reset form
-      toast({
-        title: "Inscription réussie",
-        description: "Votre compte a été créé avec succès. Vous pouvez maintenant passer votre commande.",
-      });
-      
+    if (success) {
       setIsSubmitted(true);
       
-      // Rediriger vers la page de commande après 2 secondes
+      // Redirect to order page after 2 seconds
       setTimeout(() => {
         navigate('/commande');
       }, 2000);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement de l'utilisateur:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
     }
+    
+    setIsLoading(false);
   };
 
   if (isSubmitted) {
-    return (
-      <div className="text-center py-6">
-        <div className="flex justify-center mb-4">
-          <div className="bg-green-100 rounded-full p-3">
-            <CheckCircle2 className="h-12 w-12 text-green-600" />
-          </div>
-        </div>
-        <h3 className="text-xl font-semibold text-cement-800 mb-2">Inscription réussie !</h3>
-        <p className="text-cement-600 mb-4">
-          Votre compte a été créé avec succès. Vous allez être redirigé vers la page de commande...
-        </p>
-      </div>
-    );
+    return <SuccessMessage />;
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="email">Adresse email</Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-4 w-4 text-cement-400" />
-          </div>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="exemple@gmail.com"
-            className="pl-10"
-            required
-          />
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-4 w-4 text-cement-400" />
-          </div>
-          <Input
-            id="phoneNumber"
-            type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="0123456789"
-            className="pl-10"
-            required
-          />
-        </div>
-      </div>
+      <FormFields
+        email={email}
+        setEmail={setEmail}
+        phoneNumber={phoneNumber}
+        setPhoneNumber={setPhoneNumber}
+        password={password}
+        setPassword={setPassword}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+      />
 
-      <div>
-        <Label htmlFor="password">Mot de passe</Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-4 w-4 text-cement-400" />
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="pl-10"
-            required
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-4 w-4 text-cement-400" />
-          </div>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
-            className="pl-10"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="terms" 
-          checked={acceptTerms}
-          onCheckedChange={setAcceptTerms}
-        />
-        <Label htmlFor="terms" className="text-sm text-cement-600">
-          J'accepte les conditions d'utilisation et la politique de confidentialité
-        </Label>
-      </div>
+      <TermsAndConditions
+        acceptTerms={acceptTerms}
+        setAcceptTerms={setAcceptTerms}
+      />
 
       <Button 
         type="submit" 
