@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,13 +38,7 @@ const Confirmation = () => {
   };
 
   const handleWhatsAppContact = () => {
-    const message = `Bonjour, je voudrais suivre le statut de ma commande de ciment:
-    - N° de commande: ${orderNumber}
-    - Établissement: ${orderDetails?.establishmentName}
-    - Quantité: ${orderDetails?.quantity} tonnes
-    - Ville de livraison: ${orderDetails?.city}
-    - Téléphone: ${orderDetails?.phoneNumber}
-    - Date de demande: ${new Date().toLocaleDateString()}`;
+    const message = `Salut, je suis le PDG ${orderDetails?.establishmentName}, je veux ${orderDetails?.quantity} tonnes de ciment à ${orderDetails?.city}, je suis au ${orderDetails?.phoneNumber}`;
     
     const encodedMessage = encodeURIComponent(message);
     

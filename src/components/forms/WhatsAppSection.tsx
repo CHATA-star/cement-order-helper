@@ -173,11 +173,7 @@ const WhatsAppSection = ({ formData }: WhatsAppSectionProps) => {
 
 // Separate function for creating the WhatsApp message
 const createWhatsAppMessage = (formData: WhatsAppSectionProps["formData"]) => {
-  return `Bonjour, je souhaite commander du ciment.
-    - Établissement: ${formData.establishmentName || "[Nom de l'établissement]"}
-    - Quantité: ${formData.quantity || 0} tonnes
-    - Ville de livraison: ${formData.city || "[Ville]"}
-    - Téléphone: ${formData.phoneNumber}`;
+  return `Salut, je suis le PDG ${formData.establishmentName || "[Nom de l'établissement]"}, je veux ${formData.quantity || 0} tonnes de ciment à ${formData.city || "[Ville]"}, je suis au ${formData.phoneNumber}`;
 };
 
 export default WhatsAppSection;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -139,11 +138,7 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
   const handleWhatsAppSubmit = () => {
     if (!validateForm()) return;
     
-    const message = `Bonjour, je souhaite commander du ciment.
-    - Établissement: ${formData.establishmentName}
-    - Quantité: ${formData.quantity} tonnes
-    - Ville de livraison: ${formData.city}
-    - Téléphone: ${formData.phoneNumber}`;
+    const message = `Salut, je suis le PDG ${formData.establishmentName}, je veux ${formData.quantity} tonnes de ciment à ${formData.city}, je suis au ${formData.phoneNumber}`;
     
     const encodedMessage = encodeURIComponent(message);
     
