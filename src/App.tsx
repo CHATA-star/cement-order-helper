@@ -15,14 +15,31 @@ import Admin from "./pages/Admin";
 import { syncLocalUsersToSupabase } from "./services/userService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
-const queryClient = new QueryClient();
+// Créer une instance de QueryClient avec une configuration pour la mise en cache
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => {
   useEffect(() => {
-    // Synchronize existing localStorage users with Supabase
+    // Synchroniser les utilisateurs locaux avec Supabase au démarrage
     syncLocalUsersToSupabase().catch(err => 
       console.error("Erreur lors de la synchronisation initiale:", err)
     );
+    
+    // Synchroniser périodiquement (toutes les 10 minutes)
+    const syncInterval = setInterval(() => {
+      syncLocalUsersToSupabase().catch(err =>
+        console.error("Erreur lors de la synchronisation périodique:", err)
+      );
+    }, 10 * 60 * 1000);
+    
+    return () => clearInterval(syncInterval);
   }, []);
 
   return (

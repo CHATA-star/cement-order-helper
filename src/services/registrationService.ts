@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 
@@ -81,18 +80,10 @@ export const registerUser = async (
       if (error) {
         console.error("Erreur Supabase:", error);
         // Continue even if Supabase fails, as user is saved locally
-        toast({
-          title: "Avertissement",
-          description: "Inscription réussie, mais une erreur de synchronisation est survenue.",
-        });
       }
     } catch (supabaseError) {
       console.error("Erreur de connexion Supabase:", supabaseError);
       // This catch specifically handles Supabase connection errors
-      toast({
-        title: "Avertissement",
-        description: "Inscription réussie, mais le service de synchronisation est indisponible.",
-      });
     }
     
     toast({
@@ -211,4 +202,14 @@ export const logoutUser = () => {
   });
   
   return true;
+};
+
+export const getAllUsers = (): RegisteredUser[] => {
+  try {
+    const usersData = localStorage.getItem('registeredUsers');
+    return usersData ? JSON.parse(usersData) : [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des utilisateurs:", error);
+    return [];
+  }
 };
