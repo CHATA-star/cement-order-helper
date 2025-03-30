@@ -25,7 +25,65 @@ export const addOrder = (order: Omit<OrderData, 'date'>): OrderData => {
   const orders = getAllOrders();
   orders.push(newOrder);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  
+  // Synchroniser avec Supabase (sans attendre la réponse pour ne pas bloquer l'UI)
+  syncOrderToSupabase(newOrder).catch(error => 
+    console.error("Erreur lors de la synchronisation de la commande:", error)
+  );
+  
   return newOrder;
+};
+
+// Synchroniser une commande avec Supabase
+import { supabase } from "@/lib/supabase";
+
+export const syncOrderToSupabase = async (order: OrderData): Promise<void> => {
+  try {
+    // Créer un ID unique pour la commande
+    const orderId = `CMD-${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    // Préparer les données pour Supabase
+    const orderData = {
+      id: orderId,
+      client: order.establishmentName,
+      quantity: order.quantity,
+      date: new Date(order.date).toISOString().split('T')[0],
+      status: "pending",
+      city: order.city,
+      phone_number: order.phoneNumber
+    };
+    
+    // Insérer dans Supabase
+    const { error } = await supabase
+      .from('orders')
+      .insert([orderData]);
+    
+    if (error) {
+      console.error("Erreur lors de l'enregistrement de la commande dans Supabase:", error);
+      // Ne pas arrêter l'exécution, l'ordre est déjà enregistré localement
+    } else {
+      console.log(`Commande ${orderId} synchronisée avec Supabase`);
+    }
+  } catch (error) {
+    console.error("Erreur lors de la synchronisation avec Supabase:", error);
+    // Ne pas arrêter l'exécution, l'ordre est déjà enregistré localement
+  }
+};
+
+// Synchroniser toutes les commandes locales avec Supabase
+export const syncAllOrdersToSupabase = async (): Promise<void> => {
+  try {
+    const localOrders = getAllOrders();
+    if (localOrders.length === 0) return;
+    
+    for (const order of localOrders) {
+      await syncOrderToSupabase(order);
+    }
+    
+    console.log('Toutes les commandes locales ont été synchronisées avec Supabase');
+  } catch (error) {
+    console.error("Erreur lors de la synchronisation des commandes:", error);
+  }
 };
 
 // Obtenir la quantité totale pour la semaine

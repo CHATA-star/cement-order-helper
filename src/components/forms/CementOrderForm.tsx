@@ -10,12 +10,6 @@ import WhatsAppSection from "./WhatsAppSection";
 import { MessageSquare } from "lucide-react";
 import { getCurrentUser } from "@/services/registrationService";
 
-interface CurrentUser {
-  name?: string;
-  email?: string;
-  phoneNumber?: string;
-}
-
 interface OrderFormData {
   establishmentName: string;
   quantity: number;
@@ -42,7 +36,7 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
   // Updated with international format
   const WHATSAPP_NUMBER = "+2290161080251";
 
-  // Récupérer les informations de l'utilisateur connecté - check both localStorage and sessionStorage
+  // Récupérer les informations de l'utilisateur connecté
   useEffect(() => {
     // Try to get user from session or local storage
     const currentUser = getCurrentUser();
@@ -124,7 +118,8 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
 
     setLoading(true);
 
-    addOrder(formData);
+    // Ajouter la commande (cela va également la synchroniser avec Supabase)
+    const newOrder = addOrder(formData);
 
     setTimeout(() => {
       setLoading(false);
@@ -140,11 +135,11 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     
     const encodedMessage = encodeURIComponent(message);
     
-    // Save order data before redirecting
+    // Save order data before redirecting (cela va également la synchroniser avec Supabase)
     addOrder(formData);
     sessionStorage.setItem("cementOrder", JSON.stringify(formData));
     
-    // Open WhatsApp in a new tab with updated number format
+    // Open WhatsApp in a new tab
     window.open(`https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodedMessage}`, '_blank');
   };
 

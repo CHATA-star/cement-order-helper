@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Reviews from "./pages/Reviews";
 import Admin from "./pages/Admin";
 import { syncLocalUsersToSupabase } from "./services/userService";
+import { syncAllOrdersToSupabase } from "./services/orderService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Créer une instance de QueryClient avec une configuration pour la mise en cache
@@ -27,17 +28,24 @@ const queryClient = new QueryClient({
 
 const App = () => {
   useEffect(() => {
-    // Synchroniser les utilisateurs locaux avec Supabase au démarrage
-    syncLocalUsersToSupabase().catch(err => 
-      console.error("Erreur lors de la synchronisation initiale:", err)
-    );
+    // Fonction pour synchroniser toutes les données
+    const syncAllData = async () => {
+      try {
+        // Synchroniser les utilisateurs
+        await syncLocalUsersToSupabase();
+        // Synchroniser les commandes
+        await syncAllOrdersToSupabase();
+        console.log("Synchronisation complète des données terminée");
+      } catch (err) {
+        console.error("Erreur lors de la synchronisation des données:", err);
+      }
+    };
+    
+    // Synchroniser les données au démarrage
+    syncAllData();
     
     // Synchroniser périodiquement (toutes les 10 minutes)
-    const syncInterval = setInterval(() => {
-      syncLocalUsersToSupabase().catch(err =>
-        console.error("Erreur lors de la synchronisation périodique:", err)
-      );
-    }, 10 * 60 * 1000);
+    const syncInterval = setInterval(syncAllData, 10 * 60 * 1000);
     
     return () => clearInterval(syncInterval);
   }, []);
