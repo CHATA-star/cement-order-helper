@@ -26,12 +26,12 @@ const OrderFormHeader = ({
       <CardDescription className="text-center">
         Entrez les informations nécessaires pour votre commande
       </CardDescription>
-      {isAdmin && displayAvailabilityInfo && (
+      {displayAvailabilityInfo && (
         <AvailabilityInfo 
           availableQuantity={availableQuantity}
           onUpdateQuantity={onUpdateQuantity}
           isAdmin={isAdmin}
-          showDeliveryTime={false}
+          showDeliveryTime={true}
         />
       )}
     </>

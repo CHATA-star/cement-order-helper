@@ -7,10 +7,12 @@ import OrderStats from "@/components/dashboard/OrderStats";
 import { Building, Package, MapPin, CheckCircle2, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { getAvailableStock } from "@/services/orderService";
 
 const Commande = () => {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [availableStock, setAvailableStock] = useState(0);
   
   useEffect(() => {
     // Vérifier si l'URL contient un paramètre d'admin
@@ -21,6 +23,9 @@ const Commande = () => {
     if (adminToken === 'chata123') {
       setIsAdmin(true);
     }
+
+    // Récupérer le stock disponible
+    setAvailableStock(getAvailableStock());
   }, [location]);
 
   return (
@@ -42,6 +47,7 @@ const Commande = () => {
           )}
         </section>
 
+        {/* Stats Section - Shows the same stats as in admin dashboard */}
         <OrderStats isAdmin={isAdmin} />
 
         <section className="mb-12">

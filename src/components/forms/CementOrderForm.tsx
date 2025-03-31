@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { addOrder } from "@/services/orderService";
+import { addOrder, getAvailableStock } from "@/services/orderService";
 import OrderFormFields from "./OrderFormFields";
 import OrderFormHeader from "./OrderFormHeader";
 import WhatsAppSection from "./WhatsAppSection";
@@ -29,7 +30,7 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     city: "",
   });
   const [loading, setLoading] = useState(false);
-  const [availableQuantity, setAvailableQuantity] = useState(2000); // en tonnes
+  const [availableQuantity, setAvailableQuantity] = useState(getAvailableStock()); // Fetch from service
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -48,6 +49,9 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
         phoneNumber: currentUser.phoneNumber || prev.phoneNumber
       }));
     }
+    
+    // Get the latest available stock
+    setAvailableQuantity(getAvailableStock());
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +154,7 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
           availableQuantity={availableQuantity}
           onUpdateQuantity={handleUpdateQuantity}
           isAdmin={isAdmin}
-          displayAvailabilityInfo={false}
+          displayAvailabilityInfo={true}
         />
       </CardHeader>
       <form onSubmit={handleSubmit}>
