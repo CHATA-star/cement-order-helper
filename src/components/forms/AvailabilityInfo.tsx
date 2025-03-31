@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import { Info, Edit2, Clock, Package } from "lucide-react";
+import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
 interface AvailabilityInfoProps {
   availableQuantity: number;
@@ -20,16 +21,70 @@ const AvailabilityInfo = ({
 }: AvailabilityInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempQuantity, setTempQuantity] = useState(availableQuantity);
+  const [prevQuantity, setPrevQuantity] = useState(availableQuantity);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   // Update tempQuantity when availableQuantity changes (e.g., from localStorage updates)
   useEffect(() => {
-    setTempQuantity(availableQuantity);
-  }, [availableQuantity]);
+    if (availableQuantity !== prevQuantity) {
+      setPrevQuantity(availableQuantity);
+      setTempQuantity(availableQuantity);
+    }
+  }, [availableQuantity, prevQuantity]);
+
+  // Listen for storage events from other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // This will force the component to refresh with latest data
+      const event = new Event('storage');
+      window.dispatchEvent(event);
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const handleSave = () => {
+    // Verify that the quantity is valid
+    if (tempQuantity < 0) {
+      toast({
+        title: "Erreur de quantité",
+        description: "La quantité ne peut pas être négative",
+        variant: "destructive"
+      });
+      return;
+    }
+
     onUpdateQuantity(tempQuantity);
+    setPrevQuantity(tempQuantity);
     setIsEditing(false);
+    
+    // Trigger a storage event for other windows/tabs
+    window.dispatchEvent(new Event('storage'));
+    
+    // Show success notification
+    toast({
+      title: "Stock mis à jour",
+      description: `Le stock disponible a été actualisé à ${tempQuantity} tonnes.`
+    });
+  };
+
+  const renderQuantityChange = () => {
+    const diff = availableQuantity - prevQuantity;
+    if (diff === 0 || isEditing) return null;
+    
+    return diff > 0 ? (
+      <div className="ml-2 flex items-center text-green-600">
+        <ArrowUp className="h-3 w-3 mr-1" />
+        <span className="text-xs font-medium">{`+${diff}`}</span>
+      </div>
+    ) : (
+      <div className="ml-2 flex items-center text-red-600">
+        <ArrowDown className="h-3 w-3 mr-1" />
+        <span className="text-xs font-medium">{diff}</span>
+      </div>
+    );
   };
 
   return (
@@ -54,7 +109,10 @@ const AvailabilityInfo = ({
                 <Button size="sm" onClick={handleSave}>Sauvegarder</Button>
               </div>
             ) : (
-              <span className="font-bold ml-2">{availableQuantity} tonnes</span>
+              <div className="font-bold ml-2 flex items-center">
+                <span>{availableQuantity} tonnes</span>
+                {renderQuantityChange()}
+              </div>
             )}
           </div>
           {isAdmin && (

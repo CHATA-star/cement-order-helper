@@ -12,6 +12,7 @@ const ORDERS_KEY = 'cement_orders';
 const WEEKLY_TOTAL_KEY = 'weekly_total';
 const MONTHLY_TOTAL_KEY = 'monthly_total';
 const STOCK_KEY = 'available_stock';
+const STOCK_LAST_UPDATE_KEY = 'stock_last_update';
 
 // Récupérer toutes les commandes
 export const getAllOrders = (): OrderData[] => {
@@ -135,11 +136,15 @@ export const getMonthlyTotal = (): number => {
 // Définir la quantité totale pour la semaine
 export const setWeeklyTotal = (total: number): void => {
   localStorage.setItem(WEEKLY_TOTAL_KEY, total.toString());
+  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
+  window.dispatchEvent(new Event('storage'));
 };
 
 // Définir la quantité totale pour le mois
 export const setMonthlyTotal = (total: number): void => {
   localStorage.setItem(MONTHLY_TOTAL_KEY, total.toString());
+  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
+  window.dispatchEvent(new Event('storage'));
 };
 
 // Obtenir le stock disponible
@@ -148,7 +153,25 @@ export const getAvailableStock = (): number => {
   return stock ? parseInt(stock, 10) : 2000; // Valeur par défaut de 2000 tonnes
 };
 
+// Obtenir la date de dernière mise à jour du stock
+export const getStockLastUpdate = (): Date | null => {
+  const lastUpdate = localStorage.getItem(STOCK_LAST_UPDATE_KEY);
+  return lastUpdate ? new Date(lastUpdate) : null;
+};
+
 // Définir le stock disponible
 export const setAvailableStock = (stock: number): void => {
+  // Sauvegarder l'ancien stock pour historique/comparaison
+  const oldStock = getAvailableStock();
+  
+  // Définir le nouveau stock
   localStorage.setItem(STOCK_KEY, stock.toString());
+  
+  // Mettre à jour la date de dernière modification
+  localStorage.setItem(STOCK_LAST_UPDATE_KEY, new Date().toISOString());
+  
+  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
+  window.dispatchEvent(new Event('storage'));
+  
+  console.log(`Stock mis à jour: ${oldStock} -> ${stock} tonnes`);
 };

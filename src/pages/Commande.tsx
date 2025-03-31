@@ -25,7 +25,19 @@ const Commande = () => {
     }
 
     // Récupérer le stock disponible
-    setAvailableStock(getAvailableStock());
+    const updateStock = () => {
+      setAvailableStock(getAvailableStock());
+    };
+    
+    // Initialiser avec le stock actuel
+    updateStock();
+    
+    // Mettre à jour à chaque changement de stockage
+    window.addEventListener('storage', updateStock);
+    
+    return () => {
+      window.removeEventListener('storage', updateStock);
+    };
   }, [location]);
 
   return (
