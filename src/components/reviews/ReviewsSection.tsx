@@ -42,7 +42,6 @@ const ReviewsSection = () => {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
   const currentUser = getCurrentUser();
 
   const handleAddReview = (newReview: Omit<Review, "id" | "date">) => {
@@ -62,16 +61,7 @@ const ReviewsSection = () => {
   };
 
   const handleReviewButtonClick = () => {
-    if (currentUser) {
-      setShowForm(!showForm);
-    } else {
-      toast({
-        title: "Accès restreint",
-        description: "Veuillez vous connecter pour laisser un avis",
-        variant: "destructive",
-      });
-      navigate("/login");
-    }
+    setShowForm(!showForm);
   };
 
   return (
@@ -85,16 +75,16 @@ const ReviewsSection = () => {
           className="bg-cement-600 hover:bg-cement-700"
         >
           <MessageSquarePlus className="mr-2 h-4 w-4" />
-          {showForm && currentUser ? "Annuler" : "Ajouter un avis"}
+          {showForm ? "Annuler" : "Ajouter un avis"}
         </Button>
       </div>
       
-      {showForm && currentUser && (
+      {showForm && (
         <div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-cement-100">
           <ReviewForm 
             onSubmit={handleAddReview} 
             onCancel={() => setShowForm(false)}
-            userName={currentUser.name || ""}
+            userName={currentUser?.name || ""}
           />
         </div>
       )}

@@ -1,11 +1,32 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
 import { getCurrentUser } from "@/services/registrationService";
+import { useToast } from "@/hooks/use-toast";
 
 const Reviews = () => {
   const currentUser = getCurrentUser();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+    if (!currentUser) {
+      toast({
+        title: "Accès restreint",
+        description: "Vous devez être connecté pour accéder à la page des avis clients.",
+        variant: "destructive",
+      });
+      navigate("/login");
+    }
+  }, [currentUser, navigate, toast]);
+
+  // Si l'utilisateur n'est pas connecté, ne pas rendre le contenu (pour éviter un flash avant la redirection)
+  if (!currentUser) {
+    return null;
+  }
   
   return (
     <MainLayout>
@@ -16,11 +37,7 @@ const Reviews = () => {
           </h1>
           <p className="text-cement-600 mb-8">
             Découvrez ce que nos clients disent de nos produits et services. 
-            {currentUser ? (
-              " Partagez votre expérience avec CHATA CIMENT pour nous aider à nous améliorer."
-            ) : (
-              " Connectez-vous pour partager votre expérience."
-            )}
+            Partagez votre expérience avec CHATA CIMENT pour nous aider à nous améliorer.
           </p>
         </section>
 
