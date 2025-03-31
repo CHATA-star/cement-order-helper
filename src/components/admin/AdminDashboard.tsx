@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import OrderStats from "@/components/dashboard/OrderStats";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -229,8 +228,6 @@ const AdminDashboard = () => {
                       </CardContent>
                     </Card>
                   </div>
-                  
-                  <OrderStats isAdmin={true} />
                 </div>
               </div>
             </CardContent>
