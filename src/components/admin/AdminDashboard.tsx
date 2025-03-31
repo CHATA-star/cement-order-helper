@@ -6,20 +6,36 @@ import OrderStats from "@/components/dashboard/OrderStats";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Settings, TrendingUp, Archive } from "lucide-react";
+import { User, Package, Settings, TrendingUp, Edit2 } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
-import { getAvailableStock, setAvailableStock } from "@/services/orderService";
+import { 
+  getAvailableStock, 
+  setAvailableStock, 
+  getWeeklyTotal, 
+  setWeeklyTotal, 
+  getMonthlyTotal, 
+  setMonthlyTotal 
+} from "@/services/orderService";
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [availableStock, setAvailableStockState] = useState<string>("");
+  const [weeklyTotal, setWeeklyTotalState] = useState<string>("");
+  const [monthlyTotal, setMonthlyTotalState] = useState<string>("");
+  const [isEditingWeekly, setIsEditingWeekly] = useState(false);
+  const [isEditingMonthly, setIsEditingMonthly] = useState(false);
 
   useEffect(() => {
-    // Get current stock
+    // Get current values
     const currentStock = getAvailableStock();
+    const currentWeekly = getWeeklyTotal();
+    const currentMonthly = getMonthlyTotal();
+    
     setAvailableStockState(currentStock.toString());
+    setWeeklyTotalState(currentWeekly.toString());
+    setMonthlyTotalState(currentMonthly.toString());
   }, []);
 
   const handleStockUpdate = () => {
@@ -33,6 +49,40 @@ const AdminDashboard = () => {
       toast({
         title: "Erreur",
         description: "Veuillez entrer une valeur numérique valide pour le stock.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleWeeklyUpdate = () => {
+    if (weeklyTotal && !isNaN(Number(weeklyTotal))) {
+      setWeeklyTotal(Number(weeklyTotal));
+      setIsEditingWeekly(false);
+      toast({
+        title: "Total hebdomadaire mis à jour",
+        description: `Le total des commandes hebdomadaires a été mis à jour à ${weeklyTotal} tonnes.`
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer une valeur numérique valide.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleMonthlyUpdate = () => {
+    if (monthlyTotal && !isNaN(Number(monthlyTotal))) {
+      setMonthlyTotal(Number(monthlyTotal));
+      setIsEditingMonthly(false);
+      toast({
+        title: "Total mensuel mis à jour",
+        description: `Le total des commandes mensuelles a été mis à jour à ${monthlyTotal} tonnes.`
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer une valeur numérique valide.",
         variant: "destructive"
       });
     }
@@ -80,10 +130,38 @@ const AdminDashboard = () => {
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setIsEditingWeekly(!isEditingWeekly)}
+                        >
+                          <Edit2 className="h-4 w-4 text-cement-500" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">{getAvailableStock()} tonnes</div>
-                        <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
+                        {isEditingWeekly ? (
+                          <div className="flex flex-col gap-2">
+                            <Input 
+                              type="number" 
+                              placeholder="Entrez le total hebdomadaire" 
+                              value={weeklyTotal}
+                              onChange={(e) => setWeeklyTotalState(e.target.value)}
+                              className="text-md font-medium"
+                            />
+                            <Button 
+                              className="bg-cement-600 hover:bg-cement-700 w-full" 
+                              onClick={handleWeeklyUpdate}
+                              size="sm"
+                            >
+                              Mettre à jour
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-2xl font-bold">{Number(weeklyTotal)} tonnes</div>
+                            <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                     
@@ -116,10 +194,38 @@ const AdminDashboard = () => {
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setIsEditingMonthly(!isEditingMonthly)}
+                        >
+                          <Edit2 className="h-4 w-4 text-cement-500" />
+                        </Button>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">{getAvailableStock() * 4} tonnes</div>
-                        <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
+                        {isEditingMonthly ? (
+                          <div className="flex flex-col gap-2">
+                            <Input 
+                              type="number" 
+                              placeholder="Entrez le total mensuel" 
+                              value={monthlyTotal}
+                              onChange={(e) => setMonthlyTotalState(e.target.value)}
+                              className="text-md font-medium"
+                            />
+                            <Button 
+                              className="bg-cement-600 hover:bg-cement-700 w-full" 
+                              onClick={handleMonthlyUpdate}
+                              size="sm"
+                            >
+                              Mettre à jour
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-2xl font-bold">{Number(monthlyTotal)} tonnes</div>
+                            <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
@@ -181,4 +287,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
