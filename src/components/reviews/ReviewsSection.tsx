@@ -5,6 +5,8 @@ import ReviewForm from "./ReviewForm";
 import ReviewList from "./ReviewList";
 import { Button } from "@/components/ui/button";
 import { MessageSquarePlus } from "lucide-react";
+import { getCurrentUser } from "@/services/registrationService";
+import { useNavigate } from "react-router-dom";
 
 // Define the review type
 export interface Review {
@@ -40,6 +42,8 @@ const ReviewsSection = () => {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
 
   const handleAddReview = (newReview: Omit<Review, "id" | "date">) => {
     const review = {
@@ -57,6 +61,19 @@ const ReviewsSection = () => {
     });
   };
 
+  const handleReviewButtonClick = () => {
+    if (currentUser) {
+      setShowForm(!showForm);
+    } else {
+      toast({
+        title: "Accès restreint",
+        description: "Veuillez vous connecter pour laisser un avis",
+        variant: "destructive",
+      });
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4">
       <div className="flex justify-between items-center mb-8">
@@ -64,17 +81,21 @@ const ReviewsSection = () => {
           {reviews.length} Avis clients
         </h2>
         <Button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={handleReviewButtonClick}
           className="bg-cement-600 hover:bg-cement-700"
         >
           <MessageSquarePlus className="mr-2 h-4 w-4" />
-          {showForm ? "Annuler" : "Ajouter un avis"}
+          {showForm && currentUser ? "Annuler" : "Ajouter un avis"}
         </Button>
       </div>
       
-      {showForm && (
+      {showForm && currentUser && (
         <div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-cement-100">
-          <ReviewForm onSubmit={handleAddReview} onCancel={() => setShowForm(false)} />
+          <ReviewForm 
+            onSubmit={handleAddReview} 
+            onCancel={() => setShowForm(false)}
+            userName={currentUser.name || ""}
+          />
         </div>
       )}
       

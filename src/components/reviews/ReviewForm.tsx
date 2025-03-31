@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,21 @@ import { Star } from "lucide-react";
 interface ReviewFormProps {
   onSubmit: (review: Omit<Review, "id" | "date">) => void;
   onCancel: () => void;
+  userName?: string;
 }
 
-const ReviewForm = ({ onSubmit, onCancel }: ReviewFormProps) => {
-  const [name, setName] = useState("");
+const ReviewForm = ({ onSubmit, onCancel, userName = "" }: ReviewFormProps) => {
+  const [name, setName] = useState(userName);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [product, setProduct] = useState("");
   const [hoveredRating, setHoveredRating] = useState(0);
+
+  useEffect(() => {
+    if (userName) {
+      setName(userName);
+    }
+  }, [userName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +49,8 @@ const ReviewForm = ({ onSubmit, onCancel }: ReviewFormProps) => {
           onChange={(e) => setName(e.target.value)}
           placeholder="Jean Dupont"
           required
+          className={userName ? "bg-gray-100" : ""}
+          readOnly={!!userName}
         />
       </div>
       

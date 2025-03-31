@@ -2,8 +2,11 @@
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
+import { getCurrentUser } from "@/services/registrationService";
 
 const Reviews = () => {
+  const currentUser = getCurrentUser();
+  
   return (
     <MainLayout>
       <div className="flex flex-col space-y-12">
@@ -13,7 +16,11 @@ const Reviews = () => {
           </h1>
           <p className="text-cement-600 mb-8">
             Découvrez ce que nos clients disent de nos produits et services. 
-            Partagez votre expérience avec CHATA CIMENT pour nous aider à nous améliorer.
+            {currentUser ? (
+              " Partagez votre expérience avec CHATA CIMENT pour nous aider à nous améliorer."
+            ) : (
+              " Connectez-vous pour partager votre expérience."
+            )}
           </p>
         </section>
 
