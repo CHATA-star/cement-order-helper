@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getWeeklyTotal, getMonthlyTotal, setWeeklyTotal as saveWeeklyTotal, setMonthlyTotal as saveMonthlyTotal } from "@/services/orderService";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OrderStatsProps {
   isAdmin?: boolean;
@@ -13,6 +14,7 @@ interface OrderStatsProps {
 
 const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isEditingWeekly, setIsEditingWeekly] = useState(false);
   const [isEditingMonthly, setIsEditingMonthly] = useState(false);
   const [weeklyTotal, setWeeklyTotalState] = useState(0);
@@ -30,6 +32,13 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     };
 
     loadTotals();
+    
+    // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
+    window.addEventListener('storage', loadTotals);
+    
+    return () => {
+      window.removeEventListener('storage', loadTotals);
+    };
   }, []);
 
   const handleSaveWeekly = () => {
@@ -55,7 +64,7 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-2"} gap-4 mb-8`}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>

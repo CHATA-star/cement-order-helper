@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Info, Edit2, Clock, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AvailabilityInfoProps {
   availableQuantity: number;
@@ -19,6 +20,12 @@ const AvailabilityInfo = ({
 }: AvailabilityInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempQuantity, setTempQuantity] = useState(availableQuantity);
+  const isMobile = useIsMobile();
+
+  // Update tempQuantity when availableQuantity changes (e.g., from localStorage updates)
+  useEffect(() => {
+    setTempQuantity(availableQuantity);
+  }, [availableQuantity]);
 
   const handleSave = () => {
     onUpdateQuantity(tempQuantity);
@@ -29,24 +36,26 @@ const AvailabilityInfo = ({
     <>
       <div className="mt-2 bg-cement-100 p-3 rounded-md">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-cement-600" />
-            <p className="text-sm text-cement-700">
-              Stock disponible actuellement: 
-              {isAdmin && isEditing ? (
-                <span className="ml-2 inline-flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={tempQuantity}
-                    onChange={(e) => setTempQuantity(Number(e.target.value))}
-                    className="w-32 h-8 text-sm"
-                  />
-                  <Button size="sm" onClick={handleSave}>Sauvegarder</Button>
-                </span>
-              ) : (
-                <span className="font-bold ml-2">{availableQuantity} tonnes</span>
-              )}
-            </p>
+          <div className={`flex ${isMobile ? "flex-col items-start" : "items-center"} gap-2`}>
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-cement-600" />
+              <p className="text-sm text-cement-700">
+                Stock disponible actuellement:
+              </p>
+            </div>
+            {isAdmin && isEditing ? (
+              <div className={`${isMobile ? "w-full mt-2" : "ml-2"} inline-flex items-center gap-2`}>
+                <Input
+                  type="number"
+                  value={tempQuantity}
+                  onChange={(e) => setTempQuantity(Number(e.target.value))}
+                  className={`${isMobile ? "w-full" : "w-32"} h-8 text-sm`}
+                />
+                <Button size="sm" onClick={handleSave}>Sauvegarder</Button>
+              </div>
+            ) : (
+              <span className="font-bold ml-2">{availableQuantity} tonnes</span>
+            )}
           </div>
           {isAdmin && (
             <Button 

@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Package, Settings, TrendingUp, Edit2 } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   getAvailableStock, 
   setAvailableStock, 
@@ -19,6 +20,7 @@ import {
 
 const AdminDashboard = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [availableStock, setAvailableStockState] = useState<string>("");
   const [weeklyTotal, setWeeklyTotalState] = useState<string>("");
@@ -28,18 +30,33 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // Get current values
-    const currentStock = getAvailableStock();
-    const currentWeekly = getWeeklyTotal();
-    const currentMonthly = getMonthlyTotal();
+    const loadValues = () => {
+      const currentStock = getAvailableStock();
+      const currentWeekly = getWeeklyTotal();
+      const currentMonthly = getMonthlyTotal();
+      
+      setAvailableStockState(currentStock.toString());
+      setWeeklyTotalState(currentWeekly.toString());
+      setMonthlyTotalState(currentMonthly.toString());
+    };
     
-    setAvailableStockState(currentStock.toString());
-    setWeeklyTotalState(currentWeekly.toString());
-    setMonthlyTotalState(currentMonthly.toString());
+    loadValues();
+    
+    // Listen for changes from other windows or tabs
+    window.addEventListener('storage', loadValues);
+    
+    return () => {
+      window.removeEventListener('storage', loadValues);
+    };
   }, []);
 
   const handleStockUpdate = () => {
     if (availableStock && !isNaN(Number(availableStock))) {
       setAvailableStock(Number(availableStock));
+      
+      // Trigger storage event for other windows/tabs
+      window.dispatchEvent(new Event('storage'));
+      
       toast({
         title: "Stock mis à jour",
         description: `Le stock disponible a été mis à jour à ${availableStock} tonnes.`
@@ -57,6 +74,10 @@ const AdminDashboard = () => {
     if (weeklyTotal && !isNaN(Number(weeklyTotal))) {
       setWeeklyTotal(Number(weeklyTotal));
       setIsEditingWeekly(false);
+      
+      // Trigger storage event for other windows/tabs
+      window.dispatchEvent(new Event('storage'));
+      
       toast({
         title: "Total hebdomadaire mis à jour",
         description: `Le total des commandes hebdomadaires a été mis à jour à ${weeklyTotal} tonnes.`
@@ -74,6 +95,10 @@ const AdminDashboard = () => {
     if (monthlyTotal && !isNaN(Number(monthlyTotal))) {
       setMonthlyTotal(Number(monthlyTotal));
       setIsEditingMonthly(false);
+      
+      // Trigger storage event for other windows/tabs
+      window.dispatchEvent(new Event('storage'));
+      
       toast({
         title: "Total mensuel mis à jour",
         description: `Le total des commandes mensuelles a été mis à jour à ${monthlyTotal} tonnes.`
@@ -124,7 +149,7 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-3"} gap-4 mb-8`}>
                     {/* Commandes de la semaine */}
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
