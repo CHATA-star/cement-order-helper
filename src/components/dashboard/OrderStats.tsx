@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit2Icon } from "lucide-react";
+import { Edit2Icon, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getWeeklyTotal, getMonthlyTotal, setWeeklyTotal as saveWeeklyTotal, setMonthlyTotal as saveMonthlyTotal } from "@/services/orderService";
@@ -22,22 +22,28 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   const [tempWeekly, setTempWeekly] = useState(0);
   const [tempMonthly, setTempMonthly] = useState(0);
 
+  const loadTotals = () => {
+    const weekly = getWeeklyTotal();
+    const monthly = getMonthlyTotal();
+    setWeeklyTotalState(weekly);
+    setMonthlyTotalState(monthly);
+    setTempWeekly(weekly);
+    setTempMonthly(monthly);
+  };
+
   useEffect(() => {
     // Charger les totaux depuis le localStorage ou le service
-    const loadTotals = () => {
-      const weekly = getWeeklyTotal();
-      const monthly = getMonthlyTotal();
-      setWeeklyTotalState(weekly);
-      setMonthlyTotalState(monthly);
-    };
-
     loadTotals();
     
     // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
-    window.addEventListener('storage', loadTotals);
+    const handleStorageChange = () => {
+      loadTotals();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
     
     return () => {
-      window.removeEventListener('storage', loadTotals);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -69,16 +75,26 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
           {isAdmin && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => {
-                setIsEditingWeekly(!isEditingWeekly);
-                setTempWeekly(weeklyTotal);
-              }}
-            >
-              <Edit2Icon className="h-4 w-4 text-cement-500" />
-            </Button>
+            <div className="flex space-x-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={loadTotals}
+                title="Rafraîchir"
+              >
+                <RefreshCw className="h-4 w-4 text-cement-500" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => {
+                  setIsEditingWeekly(!isEditingWeekly);
+                  setTempWeekly(weeklyTotal);
+                }}
+              >
+                <Edit2Icon className="h-4 w-4 text-cement-500" />
+              </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent>
@@ -103,16 +119,26 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
           {isAdmin && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => {
-                setIsEditingMonthly(!isEditingMonthly);
-                setTempMonthly(monthlyTotal);
-              }}
-            >
-              <Edit2Icon className="h-4 w-4 text-cement-500" />
-            </Button>
+            <div className="flex space-x-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={loadTotals}
+                title="Rafraîchir"
+              >
+                <RefreshCw className="h-4 w-4 text-cement-500" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => {
+                  setIsEditingMonthly(!isEditingMonthly);
+                  setTempMonthly(monthlyTotal);
+                }}
+              >
+                <Edit2Icon className="h-4 w-4 text-cement-500" />
+              </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent>

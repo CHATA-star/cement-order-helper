@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown } from "lucide-react";
+import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -70,6 +70,16 @@ const AvailabilityInfo = ({
     });
   };
 
+  const refreshData = () => {
+    // Trigger a storage event to force a refresh from localStorage
+    window.dispatchEvent(new Event('storage'));
+    
+    toast({
+      title: "Données actualisées",
+      description: "Les informations de stock ont été rafraîchies."
+    });
+  };
+
   const renderQuantityChange = () => {
     const diff = availableQuantity - prevQuantity;
     if (diff === 0 || isEditing) return null;
@@ -116,16 +126,28 @@ const AvailabilityInfo = ({
             )}
           </div>
           {isAdmin && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => {
-                setIsEditing(!isEditing);
-                setTempQuantity(availableQuantity);
-              }}
-            >
-              <Edit2 className="h-4 w-4 text-cement-600" />
-            </Button>
+            <div className="flex space-x-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={refreshData}
+                title="Rafraîchir les données"
+                className="h-8 w-8"
+              >
+                <RefreshCw className="h-4 w-4 text-cement-600" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => {
+                  setIsEditing(!isEditing);
+                  setTempQuantity(availableQuantity);
+                }}
+                className="h-8 w-8"
+              >
+                <Edit2 className="h-4 w-4 text-cement-600" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

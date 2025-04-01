@@ -1,4 +1,3 @@
-
 interface OrderData {
   establishmentName: string;
   quantity: number;
@@ -27,12 +26,26 @@ export const addOrder = (order: Omit<OrderData, 'date'>): OrderData => {
   orders.push(newOrder);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
   
+  // Mettre à jour les totaux des commandes après l'ajout d'une commande
+  updateOrderTotals(newOrder.quantity);
+  
   // Synchroniser avec Supabase (sans attendre la réponse pour ne pas bloquer l'UI)
   syncOrderToSupabase(newOrder).catch(error => 
     console.error("Erreur lors de la synchronisation de la commande:", error)
   );
   
   return newOrder;
+};
+
+// Mettre à jour les totaux des commandes quand une nouvelle commande est ajoutée
+const updateOrderTotals = (quantity: number): void => {
+  // Mettre à jour le total hebdomadaire
+  const weeklyTotal = getWeeklyTotal();
+  setWeeklyTotal(weeklyTotal + quantity);
+  
+  // Mettre à jour le total mensuel
+  const monthlyTotal = getMonthlyTotal();
+  setMonthlyTotal(monthlyTotal + quantity);
 };
 
 // Synchroniser une commande avec Supabase
@@ -174,4 +187,18 @@ export const setAvailableStock = (stock: number): void => {
   window.dispatchEvent(new Event('storage'));
   
   console.log(`Stock mis à jour: ${oldStock} -> ${stock} tonnes`);
+};
+
+// Fonction spécifique pour réinitialiser les compteurs en cas de besoin
+export const resetOrderCounters = (): void => {
+  const weeklyTotal = getWeeklyTotal();
+  const monthlyTotal = getMonthlyTotal();
+  
+  console.log(`Réinitialisation des compteurs - Hebdomadaire: ${weeklyTotal}, Mensuel: ${monthlyTotal}`);
+  
+  localStorage.setItem(WEEKLY_TOTAL_KEY, "0");
+  localStorage.setItem(MONTHLY_TOTAL_KEY, "0");
+  
+  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
+  window.dispatchEvent(new Event('storage'));
 };
