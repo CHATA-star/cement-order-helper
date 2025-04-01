@@ -4,20 +4,11 @@ import { useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CementOrderForm from "@/components/forms/CementOrderForm";
 import OrderStats from "@/components/dashboard/OrderStats";
-import { Building, Package, MapPin, CheckCircle2, MessageCircle, RefreshCw, Share2, Copy } from "lucide-react";
+import { Building, Package, MapPin, CheckCircle2, MessageCircle, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getAvailableStock } from "@/services/orderService";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
 const STOCK_KEY = 'available_stock';
 const WEEKLY_TOTAL_KEY = 'weekly_total';
@@ -29,8 +20,6 @@ const Commande = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [availableStock, setAvailableStock] = useState(0);
   const { toast } = useToast();
-  const [showShareDialog, setShowShareDialog] = useState(false);
-  const [shareLink, setShareLink] = useState("");
   
   const updateAllData = () => {
     console.log("Commande: Updating all data from storage");
@@ -92,37 +81,6 @@ const Commande = () => {
     });
   };
 
-  const generateShareLink = () => {
-    // Créer le lien de base (URL actuelle sans paramètres)
-    const baseUrl = window.location.origin + window.location.pathname;
-    
-    // Ajouter un paramètre timestamp pour s'assurer que les données sont fraîches
-    const timestamp = new Date().getTime();
-    const finalLink = `${baseUrl}?syncId=${timestamp}`;
-    
-    setShareLink(finalLink);
-    setShowShareDialog(true);
-  };
-
-  const copyLinkToClipboard = () => {
-    navigator.clipboard.writeText(shareLink).then(
-      () => {
-        toast({
-          title: "Lien copié !",
-          description: "Le lien a été copié dans le presse-papiers."
-        });
-      },
-      (err) => {
-        console.error("Erreur lors de la copie du lien:", err);
-        toast({
-          title: "Erreur",
-          description: "Impossible de copier le lien. Veuillez réessayer.",
-          variant: "destructive"
-        });
-      }
-    );
-  };
-
   return (
     <MainLayout>
       <div className="flex flex-col space-y-8">
@@ -139,7 +97,7 @@ const Commande = () => {
               ✓ Mode administrateur activé
             </div>
           )}
-          <div className="mt-3 flex justify-center gap-2">
+          <div className="mt-3">
             <Button 
               variant="outline" 
               size="sm"
@@ -147,14 +105,6 @@ const Commande = () => {
               className="text-xs gap-1"
             >
               <RefreshCw className="h-3 w-3" /> Actualiser les données
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={generateShareLink}
-              className="text-xs gap-1"
-            >
-              <Share2 className="h-3 w-3" /> Partager cette page
             </Button>
           </div>
         </section>
@@ -219,39 +169,6 @@ const Commande = () => {
           </div>
         </section>
       </div>
-
-      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Partager cette page</DialogTitle>
-            <DialogDescription>
-              Copiez ce lien et partagez-le avec qui vous voulez. Les données seront automatiquement synchronisées.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2 mt-4">
-            <div className="grid flex-1 gap-2">
-              <Input
-                value={shareLink}
-                readOnly
-                className="w-full"
-              />
-            </div>
-            <Button type="submit" size="sm" className="px-3" onClick={copyLinkToClipboard}>
-              <span className="sr-only">Copier</span>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-          <DialogFooter className="sm:justify-center mt-6">
-            <Button 
-              type="button"
-              variant="secondary"
-              onClick={() => setShowShareDialog(false)}
-            >
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </MainLayout>
   );
 };
