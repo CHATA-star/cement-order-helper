@@ -12,6 +12,7 @@ const WEEKLY_TOTAL_KEY = 'weekly_total';
 const MONTHLY_TOTAL_KEY = 'monthly_total';
 const STOCK_KEY = 'available_stock';
 const STOCK_LAST_UPDATE_KEY = 'stock_last_update';
+const SYNC_EVENT_KEY = 'last_sync_event';
 
 // Récupérer toutes les commandes
 export const getAllOrders = (): OrderData[] => {
@@ -29,12 +30,27 @@ export const addOrder = (order: Omit<OrderData, 'date'>): OrderData => {
   // Mettre à jour les totaux des commandes après l'ajout d'une commande
   updateOrderTotals(newOrder.quantity);
   
+  // Forcer une synchronisation entre les clients
+  triggerSyncEvent();
+  
   // Synchroniser avec Supabase (sans attendre la réponse pour ne pas bloquer l'UI)
   syncOrderToSupabase(newOrder).catch(error => 
     console.error("Erreur lors de la synchronisation de la commande:", error)
   );
   
   return newOrder;
+};
+
+// Déclencher un événement de synchronisation pour tous les clients
+const triggerSyncEvent = () => {
+  // Mettre à jour le timestamp de synchronisation
+  localStorage.setItem(SYNC_EVENT_KEY, new Date().toISOString());
+  
+  // Déclencher des événements personnalisés
+  window.dispatchEvent(new CustomEvent('orderUpdated'));
+  window.dispatchEvent(new CustomEvent('stockUpdated'));
+  
+  console.log("Événement de synchronisation déclenché");
 };
 
 // Mettre à jour les totaux des commandes quand une nouvelle commande est ajoutée
@@ -46,6 +62,8 @@ const updateOrderTotals = (quantity: number): void => {
   // Mettre à jour le total mensuel
   const monthlyTotal = getMonthlyTotal();
   setMonthlyTotal(monthlyTotal + quantity);
+  
+  console.log(`Totaux mis à jour - Hebdo: ${weeklyTotal + quantity}, Mensuel: ${monthlyTotal + quantity}`);
 };
 
 // Synchroniser une commande avec Supabase
@@ -121,6 +139,7 @@ export const getWeeklyTotal = (): number => {
   // Stocker pour utilisation future
   localStorage.setItem(WEEKLY_TOTAL_KEY, total.toString());
   
+  console.log(`Weekly total calculé: ${total}`);
   return total;
 };
 
@@ -143,6 +162,7 @@ export const getMonthlyTotal = (): number => {
   // Stocker pour utilisation future
   localStorage.setItem(MONTHLY_TOTAL_KEY, total.toString());
   
+  console.log(`Monthly total calculé: ${total}`);
   return total;
 };
 
@@ -151,6 +171,8 @@ export const setWeeklyTotal = (total: number): void => {
   localStorage.setItem(WEEKLY_TOTAL_KEY, total.toString());
   // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
   window.dispatchEvent(new Event('storage'));
+  triggerSyncEvent();
+  console.log(`Weekly total mis à jour: ${total}`);
 };
 
 // Définir la quantité totale pour le mois
@@ -158,6 +180,8 @@ export const setMonthlyTotal = (total: number): void => {
   localStorage.setItem(MONTHLY_TOTAL_KEY, total.toString());
   // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
   window.dispatchEvent(new Event('storage'));
+  triggerSyncEvent();
+  console.log(`Monthly total mis à jour: ${total}`);
 };
 
 // Obtenir le stock disponible
@@ -185,6 +209,7 @@ export const setAvailableStock = (stock: number): void => {
   
   // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
   window.dispatchEvent(new Event('storage'));
+  triggerSyncEvent();
   
   console.log(`Stock mis à jour: ${oldStock} -> ${stock} tonnes`);
 };

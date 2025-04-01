@@ -35,14 +35,28 @@ const AvailabilityInfo = ({
 
   // Listen for storage events from other tabs/windows
   useEffect(() => {
-    const handleStorageChange = () => {
-      // This will force the component to refresh with latest data
-      const event = new Event('storage');
-      window.dispatchEvent(event);
+    const handleStorageChange = (e) => {
+      console.log("AvailabilityInfo: Storage event detected", e?.key);
+      // Force refresh data on storage change
+      window.dispatchEvent(new CustomEvent('stockUpdated'));
+    };
+    
+    const handleStockUpdate = () => {
+      console.log("AvailabilityInfo: Stock update event received");
+      // This handler is empty because the component will get updated props from parent
+      // Just for debugging purposes
     };
     
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('stockUpdated', handleStockUpdate);
+    
+    // Trigger initial check
+    window.dispatchEvent(new Event('storage'));
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('stockUpdated', handleStockUpdate);
+    };
   }, []);
 
   const handleSave = () => {
@@ -60,8 +74,11 @@ const AvailabilityInfo = ({
     setPrevQuantity(tempQuantity);
     setIsEditing(false);
     
-    // Trigger a storage event for other windows/tabs
-    window.dispatchEvent(new Event('storage'));
+    // Trigger stock update events for other windows/tabs
+    window.dispatchEvent(new CustomEvent('stockUpdated'));
+    
+    // Force a storage event for all tabs/windows
+    localStorage.setItem('last_update', new Date().toISOString());
     
     // Show success notification
     toast({
@@ -73,6 +90,7 @@ const AvailabilityInfo = ({
   const refreshData = () => {
     // Trigger a storage event to force a refresh from localStorage
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('stockUpdated'));
     
     toast({
       title: "Données actualisées",

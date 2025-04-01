@@ -29,6 +29,7 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     setMonthlyTotalState(monthly);
     setTempWeekly(weekly);
     setTempMonthly(monthly);
+    console.log("OrderStats: Totals loaded", { weekly, monthly });
   };
 
   useEffect(() => {
@@ -38,22 +39,29 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     // Définir un intervalle pour mettre à jour les totaux régulièrement
     const refreshInterval = setInterval(() => {
       loadTotals();
-    }, 15000); // Actualiser toutes les 15 secondes
+    }, 5000); // Actualiser toutes les 5 secondes pour une meilleure réactivité
     
     // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'weekly_total' || e.key === 'monthly_total' || e.key === 'cement_orders') {
+    const handleStorageChange = (e) => {
+      console.log("OrderStats: Storage change detected", e?.key);
+      // Recharger les totaux pour tout changement de stockage ou spécifiquement pour les totaux
+      if (e?.key === 'weekly_total' || e?.key === 'monthly_total' || e?.key === 'cement_orders' || e?.key === null) {
         loadTotals();
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('orderUpdated', loadTotals);
+    window.addEventListener('stockUpdated', loadTotals); // Réagir aussi aux mises à jour de stock
+    
+    // Forcer une mise à jour immédiate pour s'assurer que tous les clients sont synchronisés
+    window.dispatchEvent(new Event('storage'));
     
     return () => {
       clearInterval(refreshInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('orderUpdated', loadTotals);
+      window.removeEventListener('stockUpdated', loadTotals);
     };
   }, []);
 
@@ -64,6 +72,9 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     
     // Dispatch un événement personnalisé pour notifier les autres fenêtres
     window.dispatchEvent(new CustomEvent('orderUpdated'));
+    
+    // Forcer un événement de stockage pour tous les onglets/fenêtres
+    localStorage.setItem('last_update', new Date().toISOString());
     
     toast({
       title: "Statistique mise à jour",
@@ -78,6 +89,9 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     
     // Dispatch un événement personnalisé pour notifier les autres fenêtres
     window.dispatchEvent(new CustomEvent('orderUpdated'));
+    
+    // Forcer un événement de stockage pour tous les onglets/fenêtres
+    localStorage.setItem('last_update', new Date().toISOString());
     
     toast({
       title: "Statistique mise à jour",

@@ -33,22 +33,28 @@ const Commande = () => {
     updateStock();
     
     // Mettre à jour régulièrement le stock disponible
-    const stockInterval = setInterval(updateStock, 15000); // Toutes les 15 secondes
+    const stockInterval = setInterval(updateStock, 5000); // Toutes les 5 secondes pour plus de réactivité
     
     // Mettre à jour à chaque changement de stockage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STOCK_KEY || e.key === null) {
+    const handleStorageChange = (e) => {
+      if (e.key === STOCK_KEY || e.key === null || e.key === WEEKLY_TOTAL_KEY || e.key === MONTHLY_TOTAL_KEY) {
+        console.log("Storage change detected, updating stock:", e.key);
         updateStock();
+        // Force re-render of child components
+        window.dispatchEvent(new CustomEvent('stockUpdated'));
+        window.dispatchEvent(new CustomEvent('orderUpdated'));
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('stockUpdated', updateStock);
+    window.addEventListener('orderUpdated', updateStock);
     
     return () => {
       clearInterval(stockInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('stockUpdated', updateStock);
+      window.removeEventListener('orderUpdated', updateStock);
     };
   }, [location]);
 
@@ -136,7 +142,9 @@ const Commande = () => {
   );
 };
 
-// Constante pour la clé de stockage
+// Constantes pour les clés de stockage
 const STOCK_KEY = 'available_stock';
+const WEEKLY_TOTAL_KEY = 'weekly_total';
+const MONTHLY_TOTAL_KEY = 'monthly_total';
 
 export default Commande;
