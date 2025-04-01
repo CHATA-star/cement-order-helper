@@ -21,6 +21,7 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   const [monthlyTotal, setMonthlyTotalState] = useState(0);
   const [tempWeekly, setTempWeekly] = useState(0);
   const [tempMonthly, setTempMonthly] = useState(0);
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
 
   const loadTotals = () => {
     const weekly = getWeeklyTotal();
@@ -29,39 +30,42 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     setMonthlyTotalState(monthly);
     setTempWeekly(weekly);
     setTempMonthly(monthly);
-    console.log("OrderStats: Totals loaded", { weekly, monthly });
+    setLastUpdateTime(new Date());
+    console.log("OrderStats: Totals loaded", { weekly, monthly, time: new Date().toISOString() });
   };
 
   useEffect(() => {
     // Charger les totaux depuis le localStorage
     loadTotals();
     
-    // Définir un intervalle pour mettre à jour les totaux régulièrement
+    // Définir un intervalle pour mettre à jour les totaux régulièrement (toutes les 2 secondes)
     const refreshInterval = setInterval(() => {
       loadTotals();
-    }, 5000); // Actualiser toutes les 5 secondes pour une meilleure réactivité
+    }, 2000);
     
     // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
     const handleStorageChange = (e) => {
       console.log("OrderStats: Storage change detected", e?.key);
       // Recharger les totaux pour tout changement de stockage ou spécifiquement pour les totaux
-      if (e?.key === 'weekly_total' || e?.key === 'monthly_total' || e?.key === 'cement_orders' || e?.key === null) {
-        loadTotals();
-      }
+      loadTotals();
     };
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('orderUpdated', loadTotals);
-    window.addEventListener('stockUpdated', loadTotals); // Réagir aussi aux mises à jour de stock
+    window.addEventListener('stockUpdated', loadTotals);
+    window.addEventListener('syncEvent', loadTotals);
+    window.addEventListener('forceDataRefresh', loadTotals);
     
-    // Forcer une mise à jour immédiate pour s'assurer que tous les clients sont synchronisés
-    window.dispatchEvent(new Event('storage'));
+    // Forcer une mise à jour immédiate
+    loadTotals();
     
     return () => {
       clearInterval(refreshInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('orderUpdated', loadTotals);
       window.removeEventListener('stockUpdated', loadTotals);
+      window.removeEventListener('syncEvent', loadTotals);
+      window.removeEventListener('forceDataRefresh', loadTotals);
     };
   }, []);
 
@@ -72,9 +76,10 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     
     // Dispatch un événement personnalisé pour notifier les autres fenêtres
     window.dispatchEvent(new CustomEvent('orderUpdated'));
+    window.dispatchEvent(new CustomEvent('syncEvent'));
     
     // Forcer un événement de stockage pour tous les onglets/fenêtres
-    localStorage.setItem('last_update', new Date().toISOString());
+    localStorage.setItem('sync_timestamp', new Date().toISOString());
     
     toast({
       title: "Statistique mise à jour",
@@ -89,9 +94,10 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     
     // Dispatch un événement personnalisé pour notifier les autres fenêtres
     window.dispatchEvent(new CustomEvent('orderUpdated'));
+    window.dispatchEvent(new CustomEvent('syncEvent'));
     
     // Forcer un événement de stockage pour tous les onglets/fenêtres
-    localStorage.setItem('last_update', new Date().toISOString());
+    localStorage.setItem('sync_timestamp', new Date().toISOString());
     
     toast({
       title: "Statistique mise à jour",
@@ -104,16 +110,16 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
-          {isAdmin && (
-            <div className="flex space-x-1">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={loadTotals}
-                title="Rafraîchir"
-              >
-                <RefreshCw className="h-4 w-4 text-cement-500" />
-              </Button>
+          <div className="flex space-x-1">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={loadTotals}
+              title="Rafraîchir"
+            >
+              <RefreshCw className="h-4 w-4 text-cement-500" />
+            </Button>
+            {isAdmin && (
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -124,8 +130,8 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
               >
                 <Edit2Icon className="h-4 w-4 text-cement-500" />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isEditingWeekly && isAdmin ? (
@@ -141,23 +147,26 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
           ) : (
             <div className="text-2xl font-bold">{weeklyTotal} tonnes</div>
           )}
-          <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
+          <p className="text-xs text-muted-foreground">
+            Total des commandes cette semaine 
+            <span className="ml-1 text-gray-400">(Dernière mise à jour: {lastUpdateTime.toLocaleTimeString()})</span>
+          </p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
-          {isAdmin && (
-            <div className="flex space-x-1">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={loadTotals}
-                title="Rafraîchir"
-              >
-                <RefreshCw className="h-4 w-4 text-cement-500" />
-              </Button>
+          <div className="flex space-x-1">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={loadTotals}
+              title="Rafraîchir"
+            >
+              <RefreshCw className="h-4 w-4 text-cement-500" />
+            </Button>
+            {isAdmin && (
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -168,8 +177,8 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
               >
                 <Edit2Icon className="h-4 w-4 text-cement-500" />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isEditingMonthly && isAdmin ? (
@@ -185,7 +194,10 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
           ) : (
             <div className="text-2xl font-bold">{monthlyTotal} tonnes</div>
           )}
-          <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
+          <p className="text-xs text-muted-foreground">
+            Total des commandes ce mois
+            <span className="ml-1 text-gray-400">(Dernière mise à jour: {lastUpdateTime.toLocaleTimeString()})</span>
+          </p>
         </CardContent>
       </Card>
     </div>

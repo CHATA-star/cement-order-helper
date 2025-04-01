@@ -22,6 +22,7 @@ const AvailabilityInfo = ({
   const [isEditing, setIsEditing] = useState(false);
   const [tempQuantity, setTempQuantity] = useState(availableQuantity);
   const [prevQuantity, setPrevQuantity] = useState(availableQuantity);
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -30,6 +31,7 @@ const AvailabilityInfo = ({
     if (availableQuantity !== prevQuantity) {
       setPrevQuantity(availableQuantity);
       setTempQuantity(availableQuantity);
+      setLastUpdateTime(new Date());
     }
   }, [availableQuantity, prevQuantity]);
 
@@ -37,25 +39,34 @@ const AvailabilityInfo = ({
   useEffect(() => {
     const handleStorageChange = (e) => {
       console.log("AvailabilityInfo: Storage event detected", e?.key);
-      // Force refresh data on storage change
-      window.dispatchEvent(new CustomEvent('stockUpdated'));
+      // Force refresh on storage change
+      refreshData();
     };
     
     const handleStockUpdate = () => {
       console.log("AvailabilityInfo: Stock update event received");
-      // This handler is empty because the component will get updated props from parent
-      // Just for debugging purposes
+      setLastUpdateTime(new Date());
+    };
+    
+    const handleForceRefresh = () => {
+      console.log("AvailabilityInfo: Forced refresh event received");
+      refreshData();
     };
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('stockUpdated', handleStockUpdate);
+    window.addEventListener('syncEvent', handleStockUpdate);
+    window.addEventListener('forceDataRefresh', handleForceRefresh);
     
-    // Trigger initial check
-    window.dispatchEvent(new Event('storage'));
+    // Refresh every 2 seconds to ensure real-time updates
+    const updateInterval = setInterval(refreshData, 2000);
     
     return () => {
+      clearInterval(updateInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('stockUpdated', handleStockUpdate);
+      window.removeEventListener('syncEvent', handleStockUpdate);
+      window.removeEventListener('forceDataRefresh', handleForceRefresh);
     };
   }, []);
 
@@ -73,12 +84,14 @@ const AvailabilityInfo = ({
     onUpdateQuantity(tempQuantity);
     setPrevQuantity(tempQuantity);
     setIsEditing(false);
+    setLastUpdateTime(new Date());
     
     // Trigger stock update events for other windows/tabs
     window.dispatchEvent(new CustomEvent('stockUpdated'));
+    window.dispatchEvent(new CustomEvent('syncEvent'));
     
     // Force a storage event for all tabs/windows
-    localStorage.setItem('last_update', new Date().toISOString());
+    localStorage.setItem('sync_timestamp', new Date().toISOString());
     
     // Show success notification
     toast({
@@ -88,14 +101,9 @@ const AvailabilityInfo = ({
   };
 
   const refreshData = () => {
-    // Trigger a storage event to force a refresh from localStorage
-    window.dispatchEvent(new Event('storage'));
-    window.dispatchEvent(new CustomEvent('stockUpdated'));
-    
-    toast({
-      title: "Données actualisées",
-      description: "Les informations de stock ont été rafraîchies."
-    });
+    // This function doesn't do much here since the component gets updated 
+    // from parent props, but we update the timestamp to show freshness
+    setLastUpdateTime(new Date());
   };
 
   const renderQuantityChange = () => {
@@ -143,17 +151,21 @@ const AvailabilityInfo = ({
               </div>
             )}
           </div>
-          {isAdmin && (
-            <div className="flex space-x-1">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={refreshData}
-                title="Rafraîchir les données"
-                className="h-8 w-8"
-              >
-                <RefreshCw className="h-4 w-4 text-cement-600" />
-              </Button>
+          <div className="flex space-x-1">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                refreshData();
+                window.dispatchEvent(new CustomEvent('forceDataRefresh'));
+                localStorage.setItem('sync_timestamp', new Date().toISOString());
+              }}
+              title="Rafraîchir les données"
+              className="h-8 w-8"
+            >
+              <RefreshCw className="h-4 w-4 text-cement-600" />
+            </Button>
+            {isAdmin && (
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -165,8 +177,11 @@ const AvailabilityInfo = ({
               >
                 <Edit2 className="h-4 w-4 text-cement-600" />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
+        <div className="mt-2 text-xs text-gray-500">
+          Dernière mise à jour: {lastUpdateTime.toLocaleTimeString()}
         </div>
       </div>
       

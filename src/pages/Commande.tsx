@@ -8,12 +8,28 @@ import { Building, Package, MapPin, CheckCircle2, MessageCircle } from "lucide-r
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getAvailableStock } from "@/services/orderService";
+import { useToast } from "@/hooks/use-toast";
+
+// Constantes pour les clés de stockage
+const STOCK_KEY = 'available_stock';
+const WEEKLY_TOTAL_KEY = 'weekly_total';
+const MONTHLY_TOTAL_KEY = 'monthly_total';
+const SYNC_TIMESTAMP_KEY = 'sync_timestamp';
 
 const Commande = () => {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [availableStock, setAvailableStock] = useState(0);
+  const { toast } = useToast();
   
+  // Fonction pour mettre à jour toutes les données
+  const updateAllData = () => {
+    console.log("Commande: Updating all data from storage");
+    setAvailableStock(getAvailableStock());
+    // Déclencher la mise à jour des composants enfants
+    window.dispatchEvent(new CustomEvent('forceDataRefresh'));
+  };
+
   useEffect(() => {
     // Vérifier si l'URL contient un paramètre d'admin
     const searchParams = new URLSearchParams(location.search);
@@ -24,39 +40,61 @@ const Commande = () => {
       setIsAdmin(true);
     }
 
-    // Récupérer le stock disponible
-    const updateStock = () => {
-      setAvailableStock(getAvailableStock());
-    };
+    // Récupérer le stock disponible initialement
+    updateAllData();
     
-    // Initialiser avec le stock actuel
-    updateStock();
-    
-    // Mettre à jour régulièrement le stock disponible
-    const stockInterval = setInterval(updateStock, 5000); // Toutes les 5 secondes pour plus de réactivité
+    // Mettre à jour régulièrement toutes les données (toutes les 2 secondes pour une réactivité maximale)
+    const updateInterval = setInterval(updateAllData, 2000);
     
     // Mettre à jour à chaque changement de stockage
     const handleStorageChange = (e) => {
-      if (e.key === STOCK_KEY || e.key === null || e.key === WEEKLY_TOTAL_KEY || e.key === MONTHLY_TOTAL_KEY) {
-        console.log("Storage change detected, updating stock:", e.key);
-        updateStock();
-        // Force re-render of child components
-        window.dispatchEvent(new CustomEvent('stockUpdated'));
-        window.dispatchEvent(new CustomEvent('orderUpdated'));
-      }
+      console.log("Commande: Storage change detected:", e?.key);
+      // Actualisation complète des données à chaque changement de stockage important
+      updateAllData();
     };
     
+    // Écouter tous les types d'événements qui pourraient indiquer des changements de données
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('stockUpdated', updateStock);
-    window.addEventListener('orderUpdated', updateStock);
+    window.addEventListener('stockUpdated', updateAllData);
+    window.addEventListener('orderUpdated', updateAllData);
+    window.addEventListener('syncEvent', updateAllData);
+    
+    // Vérifier régulièrement les synchronisations manuelles (polling)
+    const pollSyncTimestamp = setInterval(() => {
+      const lastSync = localStorage.getItem(SYNC_TIMESTAMP_KEY);
+      const currentTimestamp = localStorage.getItem('current_sync_timestamp');
+      
+      if (lastSync !== currentTimestamp) {
+        console.log("Commande: Sync timestamp changed, refreshing data");
+        localStorage.setItem('current_sync_timestamp', lastSync || '');
+        updateAllData();
+      }
+    }, 1000); // Vérifier chaque seconde
+    
+    // Notifier que la page est prête à recevoir des mises à jour
+    console.log("Commande: Component mounted and ready for real-time updates");
     
     return () => {
-      clearInterval(stockInterval);
+      clearInterval(updateInterval);
+      clearInterval(pollSyncTimestamp);
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('stockUpdated', updateStock);
-      window.removeEventListener('orderUpdated', updateStock);
+      window.removeEventListener('stockUpdated', updateAllData);
+      window.removeEventListener('orderUpdated', updateAllData);
+      window.removeEventListener('syncEvent', updateAllData);
     };
   }, [location]);
+
+  // Fonction pour forcer une actualisation complète des données
+  const forceRefresh = () => {
+    updateAllData();
+    // Mise à jour du timestamp pour forcer les autres clients à actualiser
+    localStorage.setItem(SYNC_TIMESTAMP_KEY, new Date().toISOString());
+    // Notification visuelle
+    toast({
+      title: "Données actualisées",
+      description: "Toutes les informations ont été mises à jour."
+    });
+  };
 
   return (
     <MainLayout>
@@ -75,6 +113,17 @@ const Commande = () => {
               ✓ Mode administrateur activé
             </div>
           )}
+          {/* Bouton de rafraîchissement manuel */}
+          <div className="mt-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={forceRefresh}
+              className="text-xs gap-1"
+            >
+              <RefreshCw className="h-3 w-3" /> Actualiser les données
+            </Button>
+          </div>
         </section>
 
         {/* Stats Section - Shows the same stats as in admin dashboard */}
@@ -141,10 +190,5 @@ const Commande = () => {
     </MainLayout>
   );
 };
-
-// Constantes pour les clés de stockage
-const STOCK_KEY = 'available_stock';
-const WEEKLY_TOTAL_KEY = 'weekly_total';
-const MONTHLY_TOTAL_KEY = 'monthly_total';
 
 export default Commande;

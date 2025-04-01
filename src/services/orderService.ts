@@ -1,3 +1,4 @@
+
 interface OrderData {
   establishmentName: string;
   quantity: number;
@@ -12,7 +13,7 @@ const WEEKLY_TOTAL_KEY = 'weekly_total';
 const MONTHLY_TOTAL_KEY = 'monthly_total';
 const STOCK_KEY = 'available_stock';
 const STOCK_LAST_UPDATE_KEY = 'stock_last_update';
-const SYNC_EVENT_KEY = 'last_sync_event';
+const SYNC_TIMESTAMP_KEY = 'sync_timestamp';
 
 // Récupérer toutes les commandes
 export const getAllOrders = (): OrderData[] => {
@@ -42,16 +43,61 @@ export const addOrder = (order: Omit<OrderData, 'date'>): OrderData => {
 };
 
 // Déclencher un événement de synchronisation pour tous les clients
-const triggerSyncEvent = () => {
-  // Mettre à jour le timestamp de synchronisation
-  localStorage.setItem(SYNC_EVENT_KEY, new Date().toISOString());
+export const triggerSyncEvent = () => {
+  console.log("Déclenchement d'un événement de synchronisation global");
   
-  // Déclencher des événements personnalisés
+  // Mettre à jour le timestamp de synchronisation pour que tous les clients sachent qu'il y a eu un changement
+  const timestamp = new Date().toISOString();
+  localStorage.setItem(SYNC_TIMESTAMP_KEY, timestamp);
+  
+  // Déclencher des événements personnalisés pour les écouteurs locaux
   window.dispatchEvent(new CustomEvent('orderUpdated'));
   window.dispatchEvent(new CustomEvent('stockUpdated'));
+  window.dispatchEvent(new CustomEvent('syncEvent', { detail: { timestamp } }));
   
-  console.log("Événement de synchronisation déclenché");
+  // Forcer un événement de stockage qui sera détecté par les autres fenêtres/onglets
+  localStorage.setItem('last_update', timestamp);
+  
+  console.log("Événement de synchronisation déclenché à", timestamp);
+  
+  // On peut également utiliser Broadcast Channel API pour une communication plus robuste entre onglets
+  try {
+    const channel = new BroadcastChannel('chata-sync-channel');
+    channel.postMessage({ 
+      type: 'sync', 
+      timestamp, 
+      source: 'orderService'
+    });
+    // Fermer le canal après l'envoi pour libérer les ressources
+    setTimeout(() => channel.close(), 100);
+  } catch (error) {
+    console.warn("BroadcastChannel API non supportée:", error);
+    // Fallback en continuant avec les autres méthodes de synchronisation
+  }
 };
+
+// Configuration des écouteurs pour le canal de broadcast
+export const setupBroadcastListeners = () => {
+  try {
+    const channel = new BroadcastChannel('chata-sync-channel');
+    channel.onmessage = (event) => {
+      console.log("Message reçu via BroadcastChannel:", event.data);
+      if (event.data.type === 'sync') {
+        // Déclencher une mise à jour des données locales
+        window.dispatchEvent(new CustomEvent('forceDataRefresh'));
+      }
+    };
+    // Garder la référence du canal pour pouvoir le fermer plus tard
+    // Cette ligne est pour l'exemple; dans une véritable implémentation,
+    // il faudrait la stocker dans une variable accessible pour le nettoyage
+    console.log("BroadcastChannel configuré avec succès");
+  } catch (error) {
+    console.warn("BroadcastChannel API non supportée:", error);
+  }
+};
+
+// Appeler cette fonction au démarrage de l'application (par exemple dans le useEffect de App.js)
+setupBroadcastListeners();
 
 // Mettre à jour les totaux des commandes quand une nouvelle commande est ajoutée
 const updateOrderTotals = (quantity: number): void => {
@@ -169,8 +215,7 @@ export const getMonthlyTotal = (): number => {
 // Définir la quantité totale pour la semaine
 export const setWeeklyTotal = (total: number): void => {
   localStorage.setItem(WEEKLY_TOTAL_KEY, total.toString());
-  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
-  window.dispatchEvent(new Event('storage'));
+  // Déclencher des événements pour informer toutes les fenêtres/onglets
   triggerSyncEvent();
   console.log(`Weekly total mis à jour: ${total}`);
 };
@@ -178,8 +223,7 @@ export const setWeeklyTotal = (total: number): void => {
 // Définir la quantité totale pour le mois
 export const setMonthlyTotal = (total: number): void => {
   localStorage.setItem(MONTHLY_TOTAL_KEY, total.toString());
-  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
-  window.dispatchEvent(new Event('storage'));
+  // Déclencher des événements pour informer toutes les fenêtres/onglets
   triggerSyncEvent();
   console.log(`Monthly total mis à jour: ${total}`);
 };
@@ -205,13 +249,13 @@ export const setAvailableStock = (stock: number): void => {
   localStorage.setItem(STOCK_KEY, stock.toString());
   
   // Mettre à jour la date de dernière modification
-  localStorage.setItem(STOCK_LAST_UPDATE_KEY, new Date().toISOString());
+  const timestamp = new Date().toISOString();
+  localStorage.setItem(STOCK_LAST_UPDATE_KEY, timestamp);
   
-  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
-  window.dispatchEvent(new Event('storage'));
+  // Déclencher des événements pour informer toutes les fenêtres/onglets
   triggerSyncEvent();
   
-  console.log(`Stock mis à jour: ${oldStock} -> ${stock} tonnes`);
+  console.log(`Stock mis à jour: ${oldStock} -> ${stock} tonnes à ${timestamp}`);
 };
 
 // Fonction spécifique pour réinitialiser les compteurs en cas de besoin
@@ -224,6 +268,6 @@ export const resetOrderCounters = (): void => {
   localStorage.setItem(WEEKLY_TOTAL_KEY, "0");
   localStorage.setItem(MONTHLY_TOTAL_KEY, "0");
   
-  // Déclencher un événement de stockage pour mettre à jour les autres fenêtres/onglets
-  window.dispatchEvent(new Event('storage'));
+  // Déclencher des événements pour informer toutes les fenêtres/onglets
+  triggerSyncEvent();
 };
