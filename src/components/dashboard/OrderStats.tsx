@@ -32,18 +32,28 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   };
 
   useEffect(() => {
-    // Charger les totaux depuis le localStorage ou le service
+    // Charger les totaux depuis le localStorage
     loadTotals();
     
-    // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
-    const handleStorageChange = () => {
+    // Définir un intervalle pour mettre à jour les totaux régulièrement
+    const refreshInterval = setInterval(() => {
       loadTotals();
+    }, 15000); // Actualiser toutes les 15 secondes
+    
+    // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'weekly_total' || e.key === 'monthly_total' || e.key === 'cement_orders') {
+        loadTotals();
+      }
     };
     
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('orderUpdated', loadTotals);
     
     return () => {
+      clearInterval(refreshInterval);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('orderUpdated', loadTotals);
     };
   }, []);
 
@@ -51,6 +61,9 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     saveWeeklyTotal(tempWeekly);
     setWeeklyTotalState(tempWeekly);
     setIsEditingWeekly(false);
+    
+    // Dispatch un événement personnalisé pour notifier les autres fenêtres
+    window.dispatchEvent(new CustomEvent('orderUpdated'));
     
     toast({
       title: "Statistique mise à jour",
@@ -62,6 +75,9 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     saveMonthlyTotal(tempMonthly);
     setMonthlyTotalState(tempMonthly);
     setIsEditingMonthly(false);
+    
+    // Dispatch un événement personnalisé pour notifier les autres fenêtres
+    window.dispatchEvent(new CustomEvent('orderUpdated'));
     
     toast({
       title: "Statistique mise à jour",

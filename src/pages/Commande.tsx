@@ -32,11 +32,23 @@ const Commande = () => {
     // Initialiser avec le stock actuel
     updateStock();
     
+    // Mettre à jour régulièrement le stock disponible
+    const stockInterval = setInterval(updateStock, 15000); // Toutes les 15 secondes
+    
     // Mettre à jour à chaque changement de stockage
-    window.addEventListener('storage', updateStock);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STOCK_KEY || e.key === null) {
+        updateStock();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('stockUpdated', updateStock);
     
     return () => {
-      window.removeEventListener('storage', updateStock);
+      clearInterval(stockInterval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('stockUpdated', updateStock);
     };
   }, [location]);
 
@@ -123,5 +135,8 @@ const Commande = () => {
     </MainLayout>
   );
 };
+
+// Constante pour la clé de stockage
+const STOCK_KEY = 'available_stock';
 
 export default Commande;

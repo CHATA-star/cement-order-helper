@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { addOrder, getAvailableStock } from "@/services/orderService";
+import { addOrder, getAvailableStock, setAvailableStock } from "@/services/orderService";
 import OrderFormFields from "./OrderFormFields";
 import OrderFormHeader from "./OrderFormHeader";
 import WhatsAppSection from "./WhatsAppSection";
@@ -51,7 +51,30 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     }
     
     // Get the latest available stock
-    setAvailableQuantity(getAvailableStock());
+    const refreshStock = () => {
+      setAvailableQuantity(getAvailableStock());
+    };
+    
+    refreshStock();
+    
+    // Mettre à jour régulièrement le stock
+    const stockInterval = setInterval(refreshStock, 10000); // Toutes les 10 secondes
+    
+    // Écouter les changements de stock
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'available_stock' || e.key === null) {
+        refreshStock();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('stockUpdated', refreshStock);
+    
+    return () => {
+      clearInterval(stockInterval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('stockUpdated', refreshStock);
+    };
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +136,12 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
 
   const handleUpdateQuantity = (newQuantity: number) => {
     setAvailableQuantity(newQuantity);
+    
+    // Mise à jour du stock global pour tous les utilisateurs
+    setAvailableStock(newQuantity);
+    
+    // Notification aux autres fenêtres
+    window.dispatchEvent(new CustomEvent('stockUpdated'));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -124,6 +153,10 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
 
     // Ajouter la commande (cela va également la synchroniser avec Supabase)
     const newOrder = addOrder(formData);
+    
+    // Mettre à jour le stock disponible
+    const newStock = availableQuantity - formData.quantity;
+    handleUpdateQuantity(newStock);
 
     setTimeout(() => {
       setLoading(false);
@@ -141,6 +174,11 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     
     // Save order data before redirecting (cela va également la synchroniser avec Supabase)
     addOrder(formData);
+    
+    // Mettre à jour le stock disponible
+    const newStock = availableQuantity - formData.quantity;
+    handleUpdateQuantity(newStock);
+    
     sessionStorage.setItem("cementOrder", JSON.stringify(formData));
     
     // Open WhatsApp in a new tab
