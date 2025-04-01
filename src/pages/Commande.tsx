@@ -1,16 +1,14 @@
-
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CementOrderForm from "@/components/forms/CementOrderForm";
 import OrderStats from "@/components/dashboard/OrderStats";
-import { Building, Package, MapPin, CheckCircle2, MessageCircle } from "lucide-react";
+import { Building, Package, MapPin, CheckCircle2, MessageCircle, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getAvailableStock } from "@/services/orderService";
 import { useToast } from "@/hooks/use-toast";
 
-// Constantes pour les clés de stockage
 const STOCK_KEY = 'available_stock';
 const WEEKLY_TOTAL_KEY = 'weekly_total';
 const MONTHLY_TOTAL_KEY = 'monthly_total';
@@ -22,44 +20,34 @@ const Commande = () => {
   const [availableStock, setAvailableStock] = useState(0);
   const { toast } = useToast();
   
-  // Fonction pour mettre à jour toutes les données
   const updateAllData = () => {
     console.log("Commande: Updating all data from storage");
     setAvailableStock(getAvailableStock());
-    // Déclencher la mise à jour des composants enfants
     window.dispatchEvent(new CustomEvent('forceDataRefresh'));
   };
 
   useEffect(() => {
-    // Vérifier si l'URL contient un paramètre d'admin
     const searchParams = new URLSearchParams(location.search);
     const adminToken = searchParams.get('adminToken');
     
-    // Vérifier si le token est valide (token très simple pour l'exemple)
     if (adminToken === 'chata123') {
       setIsAdmin(true);
     }
 
-    // Récupérer le stock disponible initialement
     updateAllData();
     
-    // Mettre à jour régulièrement toutes les données (toutes les 2 secondes pour une réactivité maximale)
     const updateInterval = setInterval(updateAllData, 2000);
     
-    // Mettre à jour à chaque changement de stockage
     const handleStorageChange = (e) => {
       console.log("Commande: Storage change detected:", e?.key);
-      // Actualisation complète des données à chaque changement de stockage important
       updateAllData();
     };
     
-    // Écouter tous les types d'événements qui pourraient indiquer des changements de données
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('stockUpdated', updateAllData);
     window.addEventListener('orderUpdated', updateAllData);
     window.addEventListener('syncEvent', updateAllData);
     
-    // Vérifier régulièrement les synchronisations manuelles (polling)
     const pollSyncTimestamp = setInterval(() => {
       const lastSync = localStorage.getItem(SYNC_TIMESTAMP_KEY);
       const currentTimestamp = localStorage.getItem('current_sync_timestamp');
@@ -69,9 +57,8 @@ const Commande = () => {
         localStorage.setItem('current_sync_timestamp', lastSync || '');
         updateAllData();
       }
-    }, 1000); // Vérifier chaque seconde
+    }, 1000);
     
-    // Notifier que la page est prête à recevoir des mises à jour
     console.log("Commande: Component mounted and ready for real-time updates");
     
     return () => {
@@ -84,12 +71,9 @@ const Commande = () => {
     };
   }, [location]);
 
-  // Fonction pour forcer une actualisation complète des données
   const forceRefresh = () => {
     updateAllData();
-    // Mise à jour du timestamp pour forcer les autres clients à actualiser
     localStorage.setItem(SYNC_TIMESTAMP_KEY, new Date().toISOString());
-    // Notification visuelle
     toast({
       title: "Données actualisées",
       description: "Toutes les informations ont été mises à jour."
@@ -99,7 +83,6 @@ const Commande = () => {
   return (
     <MainLayout>
       <div className="flex flex-col space-y-8">
-        {/* Platform Description Section */}
         <section className="text-center max-w-3xl mx-auto mb-4">
           <h2 className="text-2xl font-bold text-cement-800 mb-3">
             Plateforme de Commande de CHATA CIMENT
@@ -113,7 +96,6 @@ const Commande = () => {
               ✓ Mode administrateur activé
             </div>
           )}
-          {/* Bouton de rafraîchissement manuel */}
           <div className="mt-3">
             <Button 
               variant="outline" 
@@ -126,7 +108,6 @@ const Commande = () => {
           </div>
         </section>
 
-        {/* Stats Section - Shows the same stats as in admin dashboard */}
         <OrderStats isAdmin={isAdmin} />
 
         <section className="mb-12">
