@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Settings, TrendingUp, Edit2 } from "lucide-react";
+import { User, Package, Settings, TrendingUp, Edit2, LogOut } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,10 +15,15 @@ import {
   getWeeklyTotal, 
   setWeeklyTotal, 
   getMonthlyTotal, 
-  setMonthlyTotal 
+  setMonthlyTotal,
+  triggerSyncEvent
 } from "@/services/orderService";
 
-const AdminDashboard = () => {
+interface AdminDashboardProps {
+  onLogout: () => void;
+}
+
+const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -44,9 +49,21 @@ const AdminDashboard = () => {
     
     // Listen for changes from other windows or tabs
     window.addEventListener('storage', loadValues);
+    window.addEventListener('orderUpdated', loadValues);
+    window.addEventListener('stockUpdated', loadValues);
+    window.addEventListener('syncEvent', loadValues);
+    window.addEventListener('forceDataRefresh', loadValues);
+    
+    // Définir un intervalle pour vérifier régulièrement les mises à jour
+    const refreshInterval = setInterval(loadValues, 2000);
     
     return () => {
+      clearInterval(refreshInterval);
       window.removeEventListener('storage', loadValues);
+      window.removeEventListener('orderUpdated', loadValues);
+      window.removeEventListener('stockUpdated', loadValues);
+      window.removeEventListener('syncEvent', loadValues);
+      window.removeEventListener('forceDataRefresh', loadValues);
     };
   }, []);
 
@@ -54,8 +71,8 @@ const AdminDashboard = () => {
     if (availableStock && !isNaN(Number(availableStock))) {
       setAvailableStock(Number(availableStock));
       
-      // Trigger storage event for other windows/tabs
-      window.dispatchEvent(new Event('storage'));
+      // Déclencher un événement de synchronisation pour toutes les fenêtres/onglets
+      triggerSyncEvent();
       
       toast({
         title: "Stock mis à jour",
@@ -75,8 +92,8 @@ const AdminDashboard = () => {
       setWeeklyTotal(Number(weeklyTotal));
       setIsEditingWeekly(false);
       
-      // Trigger storage event for other windows/tabs
-      window.dispatchEvent(new Event('storage'));
+      // Déclencher un événement de synchronisation pour toutes les fenêtres/onglets
+      triggerSyncEvent();
       
       toast({
         title: "Total hebdomadaire mis à jour",
@@ -96,8 +113,8 @@ const AdminDashboard = () => {
       setMonthlyTotal(Number(monthlyTotal));
       setIsEditingMonthly(false);
       
-      // Trigger storage event for other windows/tabs
-      window.dispatchEvent(new Event('storage'));
+      // Déclencher un événement de synchronisation pour toutes les fenêtres/onglets
+      triggerSyncEvent();
       
       toast({
         title: "Total mensuel mis à jour",
@@ -114,6 +131,14 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-cement-800">Tableau de bord administrateur</h2>
+        <Button variant="outline" className="flex items-center gap-2" onClick={onLogout}>
+          <LogOut className="h-4 w-4" />
+          Déconnexion
+        </Button>
+      </div>
+      
       <Tabs defaultValue="dashboard" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">

@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import { triggerSyncEvent } from "@/services/orderService";
 
 interface AvailabilityInfoProps {
   availableQuantity: number;
@@ -26,7 +26,6 @@ const AvailabilityInfo = ({
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Update tempQuantity when availableQuantity changes (e.g., from localStorage updates)
   useEffect(() => {
     if (availableQuantity !== prevQuantity) {
       setPrevQuantity(availableQuantity);
@@ -35,11 +34,9 @@ const AvailabilityInfo = ({
     }
   }, [availableQuantity, prevQuantity]);
 
-  // Listen for storage events from other tabs/windows
   useEffect(() => {
     const handleStorageChange = (e) => {
       console.log("AvailabilityInfo: Storage event detected", e?.key);
-      // Force refresh on storage change
       refreshData();
     };
     
@@ -58,7 +55,6 @@ const AvailabilityInfo = ({
     window.addEventListener('syncEvent', handleStockUpdate);
     window.addEventListener('forceDataRefresh', handleForceRefresh);
     
-    // Refresh every 2 seconds to ensure real-time updates
     const updateInterval = setInterval(refreshData, 2000);
     
     return () => {
@@ -71,7 +67,6 @@ const AvailabilityInfo = ({
   }, []);
 
   const handleSave = () => {
-    // Verify that the quantity is valid
     if (tempQuantity < 0) {
       toast({
         title: "Erreur de quantité",
@@ -86,14 +81,8 @@ const AvailabilityInfo = ({
     setIsEditing(false);
     setLastUpdateTime(new Date());
     
-    // Trigger stock update events for other windows/tabs
-    window.dispatchEvent(new CustomEvent('stockUpdated'));
-    window.dispatchEvent(new CustomEvent('syncEvent'));
+    triggerSyncEvent();
     
-    // Force a storage event for all tabs/windows
-    localStorage.setItem('sync_timestamp', new Date().toISOString());
-    
-    // Show success notification
     toast({
       title: "Stock mis à jour",
       description: `Le stock disponible a été actualisé à ${tempQuantity} tonnes.`
@@ -101,8 +90,6 @@ const AvailabilityInfo = ({
   };
 
   const refreshData = () => {
-    // This function doesn't do much here since the component gets updated 
-    // from parent props, but we update the timestamp to show freshness
     setLastUpdateTime(new Date());
   };
 

@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit2Icon, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getWeeklyTotal, getMonthlyTotal, setWeeklyTotal as saveWeeklyTotal, setMonthlyTotal as saveMonthlyTotal } from "@/services/orderService";
+import { getWeeklyTotal, getMonthlyTotal, setWeeklyTotal as saveWeeklyTotal, setMonthlyTotal as saveMonthlyTotal, triggerSyncEvent } from "@/services/orderService";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -74,12 +73,8 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     setWeeklyTotalState(tempWeekly);
     setIsEditingWeekly(false);
     
-    // Dispatch un événement personnalisé pour notifier les autres fenêtres
-    window.dispatchEvent(new CustomEvent('orderUpdated'));
-    window.dispatchEvent(new CustomEvent('syncEvent'));
-    
-    // Forcer un événement de stockage pour tous les onglets/fenêtres
-    localStorage.setItem('sync_timestamp', new Date().toISOString());
+    // Déclencher un événement de synchronisation global
+    triggerSyncEvent();
     
     toast({
       title: "Statistique mise à jour",
@@ -92,12 +87,8 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     setMonthlyTotalState(tempMonthly);
     setIsEditingMonthly(false);
     
-    // Dispatch un événement personnalisé pour notifier les autres fenêtres
-    window.dispatchEvent(new CustomEvent('orderUpdated'));
-    window.dispatchEvent(new CustomEvent('syncEvent'));
-    
-    // Forcer un événement de stockage pour tous les onglets/fenêtres
-    localStorage.setItem('sync_timestamp', new Date().toISOString());
+    // Déclencher un événement de synchronisation global
+    triggerSyncEvent();
     
     toast({
       title: "Statistique mise à jour",
