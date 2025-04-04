@@ -1,4 +1,3 @@
-
 interface OrderData {
   establishmentName: string;
   quantity: number;
@@ -88,15 +87,13 @@ export const setupBroadcastListeners = () => {
       }
     };
     // Garder la référence du canal pour pouvoir le fermer plus tard
-    // Cette ligne est pour l'exemple; dans une véritable implémentation,
-    // il faudrait la stocker dans une variable accessible pour le nettoyage
     console.log("BroadcastChannel configuré avec succès");
   } catch (error) {
     console.warn("BroadcastChannel API non supportée:", error);
   }
 };
 
-// Appeler cette fonction au démarrage de l'application (par exemple dans le useEffect de App.js)
+// Appeler cette fonction au démarrage de l'application
 setupBroadcastListeners();
 
 // Mettre à jour les totaux des commandes quand une nouvelle commande est ajoutée
@@ -260,14 +257,53 @@ export const setAvailableStock = (stock: number): void => {
 
 // Fonction spécifique pour réinitialiser les compteurs en cas de besoin
 export const resetOrderCounters = (): void => {
-  const weeklyTotal = getWeeklyTotal();
-  const monthlyTotal = getMonthlyTotal();
-  
-  console.log(`Réinitialisation des compteurs - Hebdomadaire: ${weeklyTotal}, Mensuel: ${monthlyTotal}`);
-  
   localStorage.setItem(WEEKLY_TOTAL_KEY, "0");
   localStorage.setItem(MONTHLY_TOTAL_KEY, "0");
   
   // Déclencher des événements pour informer toutes les fenêtres/onglets
   triggerSyncEvent();
+  
+  console.log("Compteurs de commandes réinitialisés");
+};
+
+// Nouvelles fonctions pour la gestion manuelle des commandes
+
+// Recalculer les totaux en fonction des commandes existantes
+export const recalculateOrderTotals = (): void => {
+  // Récupérer les ordres depuis le stockage admin
+  const adminOrdersStr = localStorage.getItem('admin_orders');
+  if (!adminOrdersStr) {
+    console.log("Pas de commandes administrateur trouvées");
+    return;
+  }
+  
+  const adminOrders = JSON.parse(adminOrdersStr);
+  const today = new Date();
+  
+  // Calculer le total hebdomadaire (commandes de cette semaine)
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  const weeklyTotal = adminOrders
+    .filter(order => new Date(order.date) >= startOfWeek)
+    .reduce((total, order) => total + order.quantity, 0);
+  
+  // Calculer le total mensuel (commandes de ce mois)
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  
+  const monthlyTotal = adminOrders
+    .filter(order => new Date(order.date) >= startOfMonth)
+    .reduce((total, order) => total + order.quantity, 0);
+  
+  // Mettre à jour les totaux dans localStorage
+  setWeeklyTotal(weeklyTotal);
+  setMonthlyTotal(monthlyTotal);
+  
+  console.log(`Totaux recalculés - Hebdo: ${weeklyTotal}, Mensuel: ${monthlyTotal}`);
+};
+
+// Exporter des fonctions supplémentaires
+export {
+  recalculateOrderTotals
 };

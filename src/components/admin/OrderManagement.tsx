@@ -1,232 +1,187 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Save, Archive } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Order, mockOrders } from "@/types/order";
-import OrderSearch from "./orders/OrderSearch";
+import { Download, RefreshCw } from "lucide-react";
 import OrdersTable from "./orders/OrdersTable";
-import { supabase } from "@/lib/supabase";
-import { syncAllOrdersToSupabase } from "@/services/orderService";
-import { useQuery } from "@tanstack/react-query";
+import OrderSearch from "./orders/OrderSearch";
+import { Order, mockOrders } from "@/types/order";
+import { useToast } from "@/hooks/use-toast";
+import { triggerSyncEvent } from "@/services/orderService";
+
+const ORDER_STORAGE_KEY = "admin_orders";
 
 const OrderManagement = () => {
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  // Fonction pour récupérer les commandes depuis Supabase
-  const fetchOrders = async (): Promise<Order[]> => {
-    try {
-      // D'abord, synchroniser toutes les commandes locales avec Supabase
-      await syncAllOrdersToSupabase();
-      
-      // Ensuite, récupérer toutes les commandes depuis Supabase
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('date', { ascending: false });
-      
-      if (error) {
-        console.error("Erreur lors de la récupération des commandes:", error);
-        // En cas d'erreur, retourner les commandes de démonstration
-        return mockOrders;
-      }
-      
-      // Transformer les données pour correspondre au format Order
-      return data as Order[] || mockOrders;
-    } catch (error) {
-      console.error("Erreur lors de la récupération des commandes:", error);
-      return mockOrders;
+  useEffect(() => {
+    loadOrders();
+    
+    // Add event listener for order updates
+    window.addEventListener('orderUpdated', loadOrders);
+    window.addEventListener('syncEvent', loadOrders);
+    window.addEventListener('forceDataRefresh', loadOrders);
+    
+    return () => {
+      window.removeEventListener('orderUpdated', loadOrders);
+      window.removeEventListener('syncEvent', loadOrders);
+      window.removeEventListener('forceDataRefresh', loadOrders);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = orders.filter(
+        order =>
+          order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.city.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredOrders(filtered);
+    } else {
+      setFilteredOrders(orders);
+    }
+  }, [searchTerm, orders]);
+
+  const loadOrders = () => {
+    const storedOrders = localStorage.getItem(ORDER_STORAGE_KEY);
+    if (storedOrders) {
+      setOrders(JSON.parse(storedOrders));
+    } else {
+      // Use mock data if no stored orders
+      setOrders(mockOrders);
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(mockOrders));
     }
   };
-
-  // Utiliser React Query pour gérer la récupération des données
-  const { data: orders = mockOrders, isLoading, refetch } = useQuery({
-    queryKey: ['orders'],
-    queryFn: fetchOrders,
-  });
-
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.city.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const updateOrderStatus = async (id: string, newStatus: "completed" | "pending" | "cancelled") => {
-    // Mettre à jour l'état local pour une UI réactive
-    const updatedOrders = orders.map((order) =>
-      order.id === id ? { ...order, status: newStatus } : order
-    );
-    
-    // Réinitialiser l'état d'édition
-    setEditingOrderId(null);
-    
-    // Essayer de mettre à jour dans Supabase
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', id);
-      
-      if (error) {
-        console.warn("Impossible de mettre à jour la commande dans Supabase:", error.message);
-        toast({
-          title: "Erreur de synchronisation",
-          description: "La commande a été mise à jour localement mais n'a pas pu être synchronisée avec le serveur.",
-          variant: "destructive"
-        });
-      } else {
-        // Rafraîchir les données après mise à jour
-        refetch();
-        
-        // Afficher une notification de succès
-        toast({
-          title: "Statut modifié",
-          description: `La commande ${id} a été mise à jour avec succès.`
-        });
-      }
-    } catch (error) {
-      console.warn("Erreur lors de la tentative de mise à jour dans Supabase:", error);
-      toast({
-        title: "Erreur de mise à jour",
-        description: "Une erreur est survenue lors de la mise à jour du statut.",
-        variant: "destructive"
-      });
-    }
+  
+  const handleRefresh = () => {
+    loadOrders();
+    toast({
+      title: "Données actualisées",
+      description: "La liste des commandes a été mise à jour"
+    });
   };
 
   const toggleEditStatus = (id: string) => {
     setEditingOrderId(editingOrderId === id ? null : id);
   };
 
-  const handleExportOrders = () => {
-    try {
-      // Convertir les commandes en format CSV
-      const headers = ["ID", "Client", "Quantité", "Ville", "Date", "Statut"];
-      const csvContent = [
-        headers.join(","),
-        ...filteredOrders.map(order => 
-          [
-            order.id,
-            `"${order.client.replace(/"/g, '""')}"`, // Échapper les guillemets pour CSV
-            order.quantity,
-            `"${order.city.replace(/"/g, '""')}"`,
-            new Date(order.date).toLocaleDateString(),
-            order.status
-          ].join(",")
-        )
-      ].join("\n");
-      
-      // Créer un blob et un lien de téléchargement
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `commandes_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Exportation réussie",
-        description: "Les commandes ont été exportées au format CSV."
-      });
-    } catch (error) {
-      console.error("Erreur lors de l'exportation des commandes:", error);
-      toast({
-        title: "Erreur d'exportation",
-        description: "Une erreur est survenue lors de l'exportation des commandes.",
-        variant: "destructive"
-      });
-    }
+  const updateOrderStatus = (id: string, status: "completed" | "pending" | "cancelled") => {
+    const updatedOrders = orders.map(order =>
+      order.id === id ? { ...order, status } : order
+    );
+    
+    setOrders(updatedOrders);
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedOrders));
+    setEditingOrderId(null);
+    
+    // Trigger sync event to update all components
+    triggerSyncEvent();
+    
+    toast({
+      title: "Statut mis à jour",
+      description: `La commande ${id} a été mise à jour avec succès`,
+    });
+  };
+  
+  const deleteOrder = (id: string) => {
+    const updatedOrders = orders.filter(order => order.id !== id);
+    setOrders(updatedOrders);
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedOrders));
+    
+    // Trigger sync event to update all components
+    triggerSyncEvent();
+  };
+  
+  const addOrder = (orderData: Omit<Order, "id">) => {
+    // Generate a unique ID for the new order
+    const orderId = `CMD-${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    const newOrder: Order = {
+      id: orderId,
+      ...orderData
+    };
+    
+    const updatedOrders = [...orders, newOrder];
+    setOrders(updatedOrders);
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedOrders));
+    
+    // Trigger sync event to update all components
+    triggerSyncEvent();
   };
 
-  // Nouvelle fonction pour créer une sauvegarde complète des commandes
-  const handleBackupOrders = () => {
-    try {
-      // Création d'un objet de sauvegarde avec métadonnées
-      const backup = {
-        timestamp: new Date().toISOString(),
-        version: "1.0",
-        count: orders.length,
-        orders: orders
-      };
-      
-      // Convertir en JSON
-      const jsonContent = JSON.stringify(backup, null, 2);
-      
-      // Créer un blob et un lien de téléchargement
-      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `backup_commandes_${new Date().toISOString().split('T')[0]}.json`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Également sauvegarder en localStorage comme sauvegarde additionnelle
-      localStorage.setItem('orders_backup_' + new Date().toISOString(), jsonContent);
-      
-      toast({
-        title: "Sauvegarde réussie",
-        description: "Les commandes ont été sauvegardées au format JSON et stockées localement."
-      });
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des commandes:", error);
-      toast({
-        title: "Erreur de sauvegarde",
-        description: "Une erreur est survenue lors de la sauvegarde des commandes.",
-        variant: "destructive"
-      });
-    }
+  const exportToCSV = () => {
+    // Convert orders to CSV string
+    const headers = ["ID", "Client", "Ville", "Quantité", "Date", "Statut"];
+    const ordersData = orders.map(order => [
+      order.id,
+      order.client,
+      order.city,
+      order.quantity,
+      new Date(order.date).toLocaleDateString(),
+      order.status === "completed" ? "Livré" : 
+        order.status === "pending" ? "En attente" : "Annulé"
+    ]);
+    
+    // Create CSV content
+    const csvContent = [
+      headers.join(","),
+      ...ordersData.map(row => row.join(","))
+    ].join("\n");
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `commandes_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export réussi",
+      description: "Les données ont été exportées au format CSV avec succès.",
+    });
   };
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
           <CardTitle>Gestion des commandes</CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              className="bg-cement-600 hover:bg-cement-700"
-              onClick={handleExportOrders}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Exporter CSV
-            </Button>
-            <Button 
-              size="sm" 
-              className="bg-green-600 hover:bg-green-700"
-              onClick={handleBackupOrders}
-            >
-              <Archive className="mr-2 h-4 w-4" />
-              Sauvegarder
-            </Button>
-          </div>
+          <CardDescription>Gérez l'ensemble des commandes de vos clients</CardDescription>
+        </div>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualiser
+          </Button>
+          <Button variant="outline" onClick={exportToCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter CSV
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <OrderSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-        
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cement-600"></div>
-          </div>
-        ) : (
-          <OrdersTable 
-            orders={filteredOrders} 
+        <div className="space-y-4">
+          <OrderSearch onSearch={setSearchTerm} />
+          <OrdersTable
+            orders={filteredOrders}
             editingOrderId={editingOrderId}
             toggleEditStatus={toggleEditStatus}
             updateOrderStatus={updateOrderStatus}
+            deleteOrder={deleteOrder}
+            addOrder={addOrder}
           />
-        )}
+        </div>
       </CardContent>
     </Card>
   );

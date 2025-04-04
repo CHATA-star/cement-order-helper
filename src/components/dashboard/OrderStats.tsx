@@ -38,8 +38,6 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     // Charger les totaux depuis le localStorage lors du chargement initial
     loadTotals();
     
-    // Supprimer l'intervalle de rafraîchissement automatique
-    
     // Conserver les écouteurs d'événements pour les mises à jour manuelles
     const handleStorageChange = (e) => {
       console.log("OrderStats: Storage change detected", e?.key);
