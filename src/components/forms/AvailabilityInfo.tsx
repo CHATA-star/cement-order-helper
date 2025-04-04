@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,10 +56,9 @@ const AvailabilityInfo = ({
     window.addEventListener('syncEvent', handleStockUpdate);
     window.addEventListener('forceDataRefresh', handleForceRefresh);
     
-    const updateInterval = setInterval(refreshData, 2000);
+    // Supprimer l'intervalle automatique pour rendre la mise à jour manuelle uniquement
     
     return () => {
-      clearInterval(updateInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('stockUpdated', handleStockUpdate);
       window.removeEventListener('syncEvent', handleStockUpdate);

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit2Icon, RefreshCw } from "lucide-react";
@@ -34,18 +35,14 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
   };
 
   useEffect(() => {
-    // Charger les totaux depuis le localStorage
+    // Charger les totaux depuis le localStorage lors du chargement initial
     loadTotals();
     
-    // Définir un intervalle pour mettre à jour les totaux régulièrement (toutes les 2 secondes)
-    const refreshInterval = setInterval(() => {
-      loadTotals();
-    }, 2000);
+    // Supprimer l'intervalle de rafraîchissement automatique
     
-    // Ajouter un écouteur pour recharger les totaux si une autre fenêtre les met à jour
+    // Conserver les écouteurs d'événements pour les mises à jour manuelles
     const handleStorageChange = (e) => {
       console.log("OrderStats: Storage change detected", e?.key);
-      // Recharger les totaux pour tout changement de stockage ou spécifiquement pour les totaux
       loadTotals();
     };
     
@@ -55,11 +52,7 @@ const OrderStats = ({ isAdmin = false }: OrderStatsProps) => {
     window.addEventListener('syncEvent', loadTotals);
     window.addEventListener('forceDataRefresh', loadTotals);
     
-    // Forcer une mise à jour immédiate
-    loadTotals();
-    
     return () => {
-      clearInterval(refreshInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('orderUpdated', loadTotals);
       window.removeEventListener('stockUpdated', loadTotals);

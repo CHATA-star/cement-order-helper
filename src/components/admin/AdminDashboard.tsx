@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Settings, TrendingUp, Edit2, LogOut } from "lucide-react";
+import { User, Package, Settings, TrendingUp, Edit2, LogOut, RefreshCw } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -32,33 +32,41 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [monthlyTotal, setMonthlyTotalState] = useState<string>("");
   const [isEditingWeekly, setIsEditingWeekly] = useState(false);
   const [isEditingMonthly, setIsEditingMonthly] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+
+  // Fonction pour charger manuellement les valeurs
+  const loadValues = () => {
+    const currentStock = getAvailableStock();
+    const currentWeekly = getWeeklyTotal();
+    const currentMonthly = getMonthlyTotal();
+    
+    setAvailableStockState(currentStock.toString());
+    setWeeklyTotalState(currentWeekly.toString());
+    setMonthlyTotalState(currentMonthly.toString());
+    setLastUpdateTime(new Date());
+    
+    console.log("AdminDashboard: Values loaded manually", { 
+      stock: currentStock, 
+      weekly: currentWeekly, 
+      monthly: currentMonthly,
+      time: new Date().toISOString()
+    });
+  };
 
   useEffect(() => {
-    // Get current values
-    const loadValues = () => {
-      const currentStock = getAvailableStock();
-      const currentWeekly = getWeeklyTotal();
-      const currentMonthly = getMonthlyTotal();
-      
-      setAvailableStockState(currentStock.toString());
-      setWeeklyTotalState(currentWeekly.toString());
-      setMonthlyTotalState(currentMonthly.toString());
-    };
-    
+    // Charger les valeurs initiales
     loadValues();
     
-    // Listen for changes from other windows or tabs
+    // Écouter les événements pour les mises à jour manuelles
     window.addEventListener('storage', loadValues);
     window.addEventListener('orderUpdated', loadValues);
     window.addEventListener('stockUpdated', loadValues);
     window.addEventListener('syncEvent', loadValues);
     window.addEventListener('forceDataRefresh', loadValues);
     
-    // Définir un intervalle pour vérifier régulièrement les mises à jour
-    const refreshInterval = setInterval(loadValues, 2000);
+    // Supprimer l'intervalle de rafraîchissement automatique
     
     return () => {
-      clearInterval(refreshInterval);
       window.removeEventListener('storage', loadValues);
       window.removeEventListener('orderUpdated', loadValues);
       window.removeEventListener('stockUpdated', loadValues);
@@ -174,6 +182,18 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                 <div>
                   <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
                   
+                  <div className="flex justify-end mb-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={loadValues}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Rafraîchir les données
+                    </Button>
+                  </div>
+                  
                   <div className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-3"} gap-4 mb-8`}>
                     {/* Commandes de la semaine */}
                     <Card>
@@ -277,6 +297,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                         )}
                       </CardContent>
                     </Card>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 text-center">
+                    Dernière mise à jour: {lastUpdateTime.toLocaleTimeString()}
                   </div>
                 </div>
               </div>
