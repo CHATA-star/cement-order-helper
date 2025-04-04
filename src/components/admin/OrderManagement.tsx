@@ -7,7 +7,7 @@ import OrdersTable from "./orders/OrdersTable";
 import OrderSearch from "./orders/OrderSearch";
 import { Order, mockOrders } from "@/types/order";
 import { useToast } from "@/hooks/use-toast";
-import { triggerSyncEvent } from "@/services/orderService";
+import { triggerSyncEvent, recalculateOrderTotals } from "@/services/orderService";
 
 const ORDER_STORAGE_KEY = "admin_orders";
 
@@ -82,6 +82,9 @@ const OrderManagement = () => {
     // Trigger sync event to update all components
     triggerSyncEvent();
     
+    // Recalculate totals
+    recalculateOrderTotals();
+    
     toast({
       title: "Statut mis à jour",
       description: `La commande ${id} a été mise à jour avec succès`,
@@ -95,6 +98,9 @@ const OrderManagement = () => {
     
     // Trigger sync event to update all components
     triggerSyncEvent();
+    
+    // Recalculate totals after deletion
+    recalculateOrderTotals();
   };
   
   const addOrder = (orderData: Omit<Order, "id">) => {
@@ -112,6 +118,9 @@ const OrderManagement = () => {
     
     // Trigger sync event to update all components
     triggerSyncEvent();
+    
+    // Recalculate totals after addition
+    recalculateOrderTotals();
   };
 
   const exportToCSV = () => {

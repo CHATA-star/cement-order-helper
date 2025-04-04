@@ -1,3 +1,4 @@
+
 interface OrderData {
   establishmentName: string;
   quantity: number;
@@ -266,8 +267,6 @@ export const resetOrderCounters = (): void => {
   console.log("Compteurs de commandes réinitialisés");
 };
 
-// Nouvelles fonctions pour la gestion manuelle des commandes
-
 // Recalculer les totaux en fonction des commandes existantes
 export const recalculateOrderTotals = (): void => {
   // Récupérer les ordres depuis le stockage admin
@@ -303,7 +302,4 @@ export const recalculateOrderTotals = (): void => {
   console.log(`Totaux recalculés - Hebdo: ${weeklyTotal}, Mensuel: ${monthlyTotal}`);
 };
 
-// Exporter des fonctions supplémentaires
-export {
-  recalculateOrderTotals
-};
+// En supprimant l'exportation dupliquée ici
