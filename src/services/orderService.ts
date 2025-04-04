@@ -14,6 +14,7 @@ const MONTHLY_TOTAL_KEY = 'monthly_total';
 const STOCK_KEY = 'available_stock';
 const STOCK_LAST_UPDATE_KEY = 'stock_last_update';
 const SYNC_TIMESTAMP_KEY = 'sync_timestamp';
+const ORDER_STORAGE_KEY = 'admin_orders';
 
 // Récupérer toutes les commandes
 export const getAllOrders = (): OrderData[] => {
@@ -34,12 +35,43 @@ export const addOrder = (order: Omit<OrderData, 'date'>): OrderData => {
   // Forcer une synchronisation entre les clients
   triggerSyncEvent();
   
+  // Synchroniser avec l'administration
+  syncWithAdminOrders(newOrder);
+  
   // Synchroniser avec Supabase (sans attendre la réponse pour ne pas bloquer l'UI)
   syncOrderToSupabase(newOrder).catch(error => 
     console.error("Erreur lors de la synchronisation de la commande:", error)
   );
   
   return newOrder;
+};
+
+// Synchroniser avec les commandes admin
+const syncWithAdminOrders = (order: OrderData) => {
+  // Récupérer les commandes admin existantes
+  const adminOrdersStr = localStorage.getItem(ORDER_STORAGE_KEY);
+  const adminOrders = adminOrdersStr ? JSON.parse(adminOrdersStr) : [];
+  
+  // Créer un ID unique pour la commande
+  const orderId = `CMD-${Math.floor(100000 + Math.random() * 900000)}`;
+  
+  // Convertir le format de la commande
+  const adminOrder = {
+    id: orderId,
+    client: order.establishmentName,
+    quantity: order.quantity,
+    date: new Date(order.date).toISOString().split('T')[0],
+    status: "pending",
+    city: order.city
+  };
+  
+  // Ajouter à la liste des commandes admin
+  adminOrders.push(adminOrder);
+  localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(adminOrders));
+  console.log(`Commande synchronisée avec l'interface admin: ${orderId}`);
+  
+  // Recalculer les totaux
+  recalculateOrderTotals();
 };
 
 // Déclencher un événement de synchronisation pour tous les clients
@@ -270,7 +302,7 @@ export const resetOrderCounters = (): void => {
 // Recalculer les totaux en fonction des commandes existantes
 export const recalculateOrderTotals = (): void => {
   // Récupérer les ordres depuis le stockage admin
-  const adminOrdersStr = localStorage.getItem('admin_orders');
+  const adminOrdersStr = localStorage.getItem(ORDER_STORAGE_KEY);
   if (!adminOrdersStr) {
     console.log("Pas de commandes administrateur trouvées");
     return;
@@ -301,5 +333,3 @@ export const recalculateOrderTotals = (): void => {
   
   console.log(`Totaux recalculés - Hebdo: ${weeklyTotal}, Mensuel: ${monthlyTotal}`);
 };
-
-// En supprimant l'exportation dupliquée ici
