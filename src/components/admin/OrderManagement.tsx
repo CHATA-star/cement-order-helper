@@ -8,11 +8,13 @@ import OrderSearch from "./orders/OrderSearch";
 import { Order, mockOrders } from "@/types/order";
 import { useToast } from "@/hooks/use-toast";
 import { triggerSyncEvent, recalculateOrderTotals } from "@/services/orderService";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ORDER_STORAGE_KEY = "admin_orders";
 
 const OrderManagement = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -163,23 +165,23 @@ const OrderManagement = () => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className={`${isMobile ? "p-3 pb-0" : ""} flex flex-col gap-2`}>
         <div>
-          <CardTitle>Gestion des commandes</CardTitle>
+          <CardTitle className={isMobile ? "text-lg" : ""}>Gestion des commandes</CardTitle>
           <CardDescription>Gérez l'ensemble des commandes de vos clients</CardDescription>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleRefresh}>
+        <div className={`flex ${isMobile ? "flex-col" : "flex-row"} ${isMobile ? "space-y-2" : "space-x-2"} mt-2`}>
+          <Button variant="outline" className="w-full md:w-auto" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
           </Button>
-          <Button variant="outline" onClick={exportToCSV}>
+          <Button variant="outline" className="w-full md:w-auto" onClick={exportToCSV}>
             <Download className="h-4 w-4 mr-2" />
             Exporter CSV
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isMobile ? "p-3" : ""}>
         <div className="space-y-4">
           <OrderSearch onSearch={setSearchTerm} />
           <OrdersTable

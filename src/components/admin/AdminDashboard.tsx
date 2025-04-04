@@ -64,8 +64,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     window.addEventListener('syncEvent', loadValues);
     window.addEventListener('forceDataRefresh', loadValues);
     
-    // Supprimer l'intervalle de rafraîchissement automatique
-    
     return () => {
       window.removeEventListener('storage', loadValues);
       window.removeEventListener('orderUpdated', loadValues);
@@ -139,46 +137,63 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <h2 className="text-2xl font-bold text-cement-800">Tableau de bord administrateur</h2>
-        <Button variant="outline" className="flex items-center gap-2" onClick={onLogout}>
+        <Button variant="outline" className="flex items-center gap-2 w-full md:w-auto" onClick={onLogout}>
           <LogOut className="h-4 w-4" />
           Déconnexion
         </Button>
       </div>
       
       <Tabs defaultValue="dashboard" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 mb-4">
+        <TabsList className={`grid ${isMobile ? "grid-cols-2 gap-2 mb-4" : "grid-cols-4 mb-4"}`}>
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Tableau de bord</span>
+            <span className={isMobile ? "text-xs" : "hidden sm:inline"}>Tableau de bord</span>
           </TabsTrigger>
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            <span className="hidden sm:inline">Commandes</span>
+            <span className={isMobile ? "text-xs" : "hidden sm:inline"}>Commandes</span>
           </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Utilisateurs</span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Paramètres</span>
-          </TabsTrigger>
+          {!isMobile && (
+            <>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Utilisateurs</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Paramètres</span>
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
+        
+        {isMobile && (
+          <TabsList className="grid grid-cols-2 gap-2 mb-4">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="text-xs">Utilisateurs</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="text-xs">Paramètres</span>
+            </TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="dashboard" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle className="text-xl">Tableau de bord CHATA CIMENT</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-cement-600 mb-4">
-                Bienvenue dans l'interface d'administration de CHATA CIMENT. Vous pouvez gérer les commandes, 
-                les utilisateurs et configurer les paramètres du site.
+              <p className="text-cement-600 mb-4 text-sm">
+                Bienvenue dans l'interface d'administration. Gérez les commandes, 
+                les utilisateurs et les paramètres depuis cette interface.
               </p>
               
-              <div className="mt-6 space-y-6">
+              <div className="mt-4 space-y-4">
                 <div>
                   <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
                   
@@ -187,14 +202,43 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                       variant="outline" 
                       size="sm" 
                       onClick={loadValues}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-xs"
                     >
-                      <RefreshCw className="h-4 w-4" />
-                      Rafraîchir les données
+                      <RefreshCw className="h-3 w-3" />
+                      Actualiser
                     </Button>
                   </div>
                   
-                  <div className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-3"} gap-4 mb-8`}>
+                  <div className="grid grid-cols-1 gap-3 mb-6">
+                    {/* Stock disponible actuellement */}
+                    <Card className="bg-amber-50/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-amber-700">Stock disponible</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-amber-600">Tonnes disponibles :</span>
+                            <span className="font-bold text-xl text-amber-800">{availableStock}</span>
+                          </div>
+                          <Input 
+                            type="number" 
+                            placeholder="Modifier stock disponible" 
+                            value={availableStock}
+                            onChange={(e) => setAvailableStockState(e.target.value)}
+                            className="text-md text-amber-700 border-amber-300"
+                          />
+                          <Button 
+                            className="bg-amber-600 hover:bg-amber-700 w-full" 
+                            onClick={handleStockUpdate}
+                            size="sm"
+                          >
+                            Mettre à jour le stock
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
                     {/* Commandes de la semaine */}
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -231,31 +275,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                             <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
                           </>
                         )}
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Stock disponible actuellement */}
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Stock disponible</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-col gap-2">
-                          <Input 
-                            type="number" 
-                            placeholder="Entrez le stock disponible" 
-                            value={availableStock}
-                            onChange={(e) => setAvailableStockState(e.target.value)}
-                            className="text-md font-medium"
-                          />
-                          <Button 
-                            className="bg-cement-600 hover:bg-cement-700 w-full" 
-                            onClick={handleStockUpdate}
-                            size="sm"
-                          >
-                            Mettre à jour
-                          </Button>
-                        </div>
                       </CardContent>
                     </Card>
                     
@@ -339,7 +358,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                       <Input defaultValue="nabiletamou@gmail.com" />
                     </div>
                   </div>
-                  <Button className="mt-4 bg-cement-600 hover:bg-cement-700" onClick={() => {
+                  <Button className="mt-4 bg-cement-600 hover:bg-cement-700 w-full sm:w-auto" onClick={() => {
                     toast({
                       title: "Paramètres sauvegardés",
                       description: "Les modifications ont été enregistrées avec succès."

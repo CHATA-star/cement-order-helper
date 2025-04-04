@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -32,6 +33,7 @@ const OrdersTable = ({
   addOrder
 }: OrdersTableProps) => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const form = useForm({
     defaultValues: {
       client: "",
@@ -73,6 +75,71 @@ const OrdersTable = ({
       }
     }
   };
+  
+  const renderMobileOrderCard = (order: Order) => (
+    <div className="border rounded-lg mb-3 overflow-hidden bg-white">
+      <div className="bg-cement-100 p-2 flex items-center justify-between">
+        <div>
+          <span className="text-xs text-cement-500">ID: </span>
+          <span className="font-semibold text-sm">{order.id}</span>
+        </div>
+        <OrderStatusBadge status={order.status} />
+      </div>
+      <div className="p-3 space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="font-medium">Client:</span> 
+          <span>{order.client}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">Ville:</span> 
+          <span>{order.city}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">Quantité:</span> 
+          <span>{order.quantity} tonnes</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">Date:</span> 
+          <span>{new Date(order.date).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <div className="border-t p-2 flex justify-between gap-2">
+        {editingOrderId === order.id ? (
+          <Select 
+            defaultValue={order.status}
+            onValueChange={(value) => updateOrderStatus(order.id, value as "completed" | "pending" | "cancelled")}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Changer le statut" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="completed">Livré</SelectItem>
+              <SelectItem value="cancelled">Annulé</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <>
+            <OrderActions 
+              order={order} 
+              editingOrderId={editingOrderId}
+              toggleEditStatus={toggleEditStatus}
+              updateOrderStatus={updateOrderStatus}
+            />
+            {deleteOrder && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => handleDeleteOrder(order.id)}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
   
   return (
     <div className="border rounded-md">
@@ -169,78 +236,90 @@ const OrdersTable = ({
         </div>
       )}
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Numéro</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Ville</TableHead>
-            <TableHead>Quantité</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead className="w-[180px]">Statut</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      {isMobile ? (
+        <div className="p-2">
           {orders.length > 0 ? (
-            orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id}</TableCell>
-                <TableCell>{order.client}</TableCell>
-                <TableCell>{order.city}</TableCell>
-                <TableCell>{order.quantity} tonnes</TableCell>
-                <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  {editingOrderId === order.id ? (
-                    <Select 
-                      defaultValue={order.status}
-                      onValueChange={(value) => updateOrderStatus(order.id, value as "completed" | "pending" | "cancelled")}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Changer le statut" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="completed">Livré</SelectItem>
-                        <SelectItem value="cancelled">Annulé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div onClick={() => toggleEditStatus(order.id)} className="cursor-pointer">
-                      <OrderStatusBadge status={order.status} />
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <OrderActions 
-                      order={order} 
-                      editingOrderId={editingOrderId}
-                      toggleEditStatus={toggleEditStatus}
-                      updateOrderStatus={updateOrderStatus}
-                    />
-                    {deleteOrder && (
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleDeleteOrder(order.id)}
+            orders.map((order) => renderMobileOrderCard(order))
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              Aucune commande trouvée
+            </div>
+          )}
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Numéro</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Ville</TableHead>
+              <TableHead>Quantité</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="w-[180px]">Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.length > 0 ? (
+              orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell>{order.client}</TableCell>
+                  <TableCell>{order.city}</TableCell>
+                  <TableCell>{order.quantity} tonnes</TableCell>
+                  <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {editingOrderId === order.id ? (
+                      <Select 
+                        defaultValue={order.status}
+                        onValueChange={(value) => updateOrderStatus(order.id, value as "completed" | "pending" | "cancelled")}
                       >
-                        <Trash className="h-4 w-4" />
-                      </Button>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Changer le statut" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="pending">En attente</SelectItem>
+                          <SelectItem value="completed">Livré</SelectItem>
+                          <SelectItem value="cancelled">Annulé</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div onClick={() => toggleEditStatus(order.id)} className="cursor-pointer">
+                        <OrderStatusBadge status={order.status} />
+                      </div>
                     )}
-                  </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <OrderActions 
+                        order={order} 
+                        editingOrderId={editingOrderId}
+                        toggleEditStatus={toggleEditStatus}
+                        updateOrderStatus={updateOrderStatus}
+                      />
+                      {deleteOrder && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleDeleteOrder(order.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-4">
+                  Aucune commande trouvée
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-4">
-                Aucune commande trouvée
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            )}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 };

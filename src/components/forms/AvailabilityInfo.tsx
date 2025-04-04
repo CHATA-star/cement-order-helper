@@ -56,8 +56,6 @@ const AvailabilityInfo = ({
     window.addEventListener('syncEvent', handleStockUpdate);
     window.addEventListener('forceDataRefresh', handleForceRefresh);
     
-    // Supprimer l'intervalle automatique pour rendre la mise à jour manuelle uniquement
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('stockUpdated', handleStockUpdate);
@@ -113,7 +111,7 @@ const AvailabilityInfo = ({
   return (
     <>
       <div className="mt-2 bg-cement-100 p-3 rounded-md">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap">
           <div className={`flex ${isMobile ? "flex-col items-start" : "items-center"} gap-2`}>
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-cement-600" />
@@ -129,7 +127,7 @@ const AvailabilityInfo = ({
                   onChange={(e) => setTempQuantity(Number(e.target.value))}
                   className={`${isMobile ? "w-full" : "w-32"} h-8 text-sm`}
                 />
-                <Button size="sm" onClick={handleSave}>Sauvegarder</Button>
+                <Button size="sm" onClick={handleSave} className="whitespace-nowrap">Sauvegarder</Button>
               </div>
             ) : (
               <div className="font-bold ml-2 flex items-center">
@@ -138,7 +136,7 @@ const AvailabilityInfo = ({
               </div>
             )}
           </div>
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 mt-2 md:mt-0">
             <Button 
               variant="ghost" 
               size="icon"

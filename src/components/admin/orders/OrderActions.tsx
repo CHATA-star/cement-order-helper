@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, CheckCircle, XCircle, Save } from "lucide-react";
 import { Order } from "@/types/order";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OrderActionsProps {
   order: Order;
@@ -18,22 +19,25 @@ const OrderActions = ({
   toggleEditStatus,
   updateOrderStatus 
 }: OrderActionsProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="flex justify-end gap-2">
       <Button 
         variant="outline" 
         size="sm" 
         onClick={() => toggleEditStatus(order.id)}
+        className={isMobile ? "text-xs px-2 py-1 h-8" : ""}
       >
         {editingOrderId === order.id ? (
           <>
             <Save className="h-4 w-4 mr-1" />
-            Fermer
+            {!isMobile && "Fermer"}
           </>
         ) : (
           <>
             <Edit className="h-4 w-4 mr-1" />
-            Modifier statut
+            {!isMobile && "Modifier statut"}
           </>
         )}
       </Button>
@@ -41,8 +45,12 @@ const OrderActions = ({
       {!editingOrderId && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              Changer statut
+            <Button 
+              variant="outline" 
+              size="sm"
+              className={isMobile ? "text-xs px-2 py-1 h-8" : ""}
+            >
+              {isMobile ? "Statut" : "Changer statut"}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-white">

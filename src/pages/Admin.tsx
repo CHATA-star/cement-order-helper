@@ -4,10 +4,12 @@ import MainLayout from "@/components/layout/MainLayout";
 import AdminLogin from "@/components/admin/AdminLogin";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Check if user was previously authenticated
   useEffect(() => {
@@ -48,8 +50,8 @@ const Admin = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-cement-800 mb-6 text-center">
+      <div className={`max-w-4xl mx-auto px-4 ${isMobile ? "pt-2" : "pt-4"}`}>
+        <h1 className={`${isMobile ? "text-xl" : "text-3xl"} font-bold text-cement-800 mb-6 text-center`}>
           Administration CHATA CIMENT
         </h1>
         
