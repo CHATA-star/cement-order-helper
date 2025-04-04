@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Save, Archive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Order, mockOrders } from "@/types/order";
 import OrderSearch from "./orders/OrderSearch";
@@ -145,19 +145,71 @@ const OrderManagement = () => {
     }
   };
 
+  // Nouvelle fonction pour créer une sauvegarde complète des commandes
+  const handleBackupOrders = () => {
+    try {
+      // Création d'un objet de sauvegarde avec métadonnées
+      const backup = {
+        timestamp: new Date().toISOString(),
+        version: "1.0",
+        count: orders.length,
+        orders: orders
+      };
+      
+      // Convertir en JSON
+      const jsonContent = JSON.stringify(backup, null, 2);
+      
+      // Créer un blob et un lien de téléchargement
+      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `backup_commandes_${new Date().toISOString().split('T')[0]}.json`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Également sauvegarder en localStorage comme sauvegarde additionnelle
+      localStorage.setItem('orders_backup_' + new Date().toISOString(), jsonContent);
+      
+      toast({
+        title: "Sauvegarde réussie",
+        description: "Les commandes ont été sauvegardées au format JSON et stockées localement."
+      });
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde des commandes:", error);
+      toast({
+        title: "Erreur de sauvegarde",
+        description: "Une erreur est survenue lors de la sauvegarde des commandes.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle>Gestion des commandes</CardTitle>
-          <Button 
-            size="sm" 
-            className="bg-cement-600 hover:bg-cement-700"
-            onClick={handleExportOrders}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Exporter les commandes
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              className="bg-cement-600 hover:bg-cement-700"
+              onClick={handleExportOrders}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Exporter CSV
+            </Button>
+            <Button 
+              size="sm" 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleBackupOrders}
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              Sauvegarder
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

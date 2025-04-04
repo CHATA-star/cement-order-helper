@@ -35,6 +35,16 @@ const Admin = () => {
     }
     return false;
   };
+  
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('admin_authenticated');
+    
+    toast({
+      title: "Déconnexion réussie",
+      description: "Vous avez été déconnecté de l'interface d'administration.",
+    });
+  };
 
   return (
     <MainLayout>
@@ -44,7 +54,7 @@ const Admin = () => {
         </h1>
         
         {isAuthenticated ? (
-          <AdminDashboard />
+          <AdminDashboard onLogout={handleLogout} />
         ) : (
           <AdminLogin onLogin={handleLogin} />
         )}
