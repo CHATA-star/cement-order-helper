@@ -9,12 +9,11 @@ import { Building, Package, MapPin, CheckCircle2, MessageCircle } from "lucide-r
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAvailableStock } from "@/services/orderService";
+import { getAvailableStock, setupBroadcastListeners } from "@/services/orderService";
 
 const Commande = () => {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [availableStock, setAvailableStock] = useState(0);
   
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -23,27 +22,13 @@ const Commande = () => {
     if (adminToken === 'chata123') {
       setIsAdmin(true);
     }
-
-    setAvailableStock(getAvailableStock());
     
-    // Ajouter les écouteurs d'événements pour les mises à jour du stock
-    const handleStorageChange = () => {
-      setAvailableStock(getAvailableStock());
-    };
+    // Configurer les écouteurs pour la communication entre onglets
+    setupBroadcastListeners();
     
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('stockUpdated', handleStorageChange);
-    window.addEventListener('orderUpdated', handleStorageChange);
-    window.addEventListener('syncEvent', handleStorageChange);
-    window.addEventListener('forceDataRefresh', handleStorageChange);
+    // Déclenchement d'un événement pour forcer la mise à jour des données
+    window.dispatchEvent(new CustomEvent('forceDataRefresh'));
     
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('stockUpdated', handleStorageChange);
-      window.removeEventListener('orderUpdated', handleStorageChange);
-      window.removeEventListener('syncEvent', handleStorageChange);
-      window.removeEventListener('forceDataRefresh', handleStorageChange);
-    };
   }, [location]);
 
   return (

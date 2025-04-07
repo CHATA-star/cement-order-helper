@@ -47,6 +47,9 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     // Charger les valeurs initiales
     loadValues();
     
+    // Configurer un intervalle pour rafraîchir les valeurs régulièrement
+    const refreshInterval = setInterval(loadValues, 30000); // Rafraîchir toutes les 30 secondes
+    
     // Écouter les événements pour les mises à jour manuelles
     window.addEventListener('storage', loadValues);
     window.addEventListener('orderUpdated', loadValues);
@@ -55,6 +58,7 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     window.addEventListener('forceDataRefresh', loadValues);
     
     return () => {
+      clearInterval(refreshInterval);
       window.removeEventListener('storage', loadValues);
       window.removeEventListener('orderUpdated', loadValues);
       window.removeEventListener('stockUpdated', loadValues);
