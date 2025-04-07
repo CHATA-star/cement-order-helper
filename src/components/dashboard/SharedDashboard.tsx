@@ -162,21 +162,21 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
         {/* Commandes hebdomadaires */}
         <Card>
           <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
-            <CardTitle className={`${iMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes de la semaine</CardTitle>
+            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes de la semaine</CardTitle>
           </CardHeader>
           <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
-            <div className={`${iMobile ? "text-xl" : "text-2xl"} font-bold`}>{weeklyTotal} tonnes</div>
+            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold`}>{weeklyTotal} tonnes</div>
             <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
           </CardContent>
         </Card>
         
         {/* Commandes mensuelles */}
         <Card>
-          <CardHeader className={`${iMobile ? "py-2 px-3" : "pb-2"}`}>
-            <CardTitle className={`${iMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes du mois</CardTitle>
+          <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
+            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes du mois</CardTitle>
           </CardHeader>
-          <CardContent className={iMobile ? "pt-0 px-3 pb-3" : ""}>
-            <div className={`${iMobile ? "text-xl" : "text-2xl"} font-bold`}>{monthlyTotal} tonnes</div>
+          <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
+            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold`}>{monthlyTotal} tonnes</div>
             <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
           </CardContent>
         </Card>
