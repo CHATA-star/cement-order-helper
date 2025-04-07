@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { addOrder, getAvailableStock, setAvailableStock } from "@/services/orderService";
+import { createOrder, getAvailableStock, setAvailableStock } from "@/services/orderService";
 import OrderFormFields from "./OrderFormFields";
 import OrderFormHeader from "./OrderFormHeader";
 import WhatsAppSection from "./WhatsAppSection";
@@ -152,7 +152,14 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     setLoading(true);
 
     // Ajouter la commande (cela va également la synchroniser avec Supabase)
-    const newOrder = addOrder(formData);
+    const newOrder = createOrder({
+      establishmentName: formData.establishmentName,
+      quantity: formData.quantity,
+      deliveryCity: formData.city,
+      contactNumber: formData.phoneNumber,
+      additionalNotes: "",
+      deliveryAddress: formData.city
+    });
     
     // Mettre à jour le stock disponible
     const newStock = availableQuantity - formData.quantity;
@@ -173,7 +180,14 @@ const CementOrderForm = ({ isAdmin = false }: CementOrderFormProps) => {
     const encodedMessage = encodeURIComponent(message);
     
     // Save order data before redirecting (cela va également la synchroniser avec Supabase)
-    addOrder(formData);
+    createOrder({
+      establishmentName: formData.establishmentName,
+      quantity: formData.quantity,
+      deliveryCity: formData.city,
+      contactNumber: formData.phoneNumber,
+      additionalNotes: "Commande via WhatsApp",
+      deliveryAddress: formData.city
+    });
     
     // Mettre à jour le stock disponible
     const newStock = availableQuantity - formData.quantity;

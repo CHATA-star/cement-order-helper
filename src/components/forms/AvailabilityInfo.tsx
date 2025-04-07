@@ -37,7 +37,7 @@ const AvailabilityInfo = ({
   }, [availableQuantity, prevQuantity]);
 
   useEffect(() => {
-    const handleStorageChange = (e) => {
+    const handleStorageChange = (e: any) => {
       console.log("AvailabilityInfo: Storage event detected", e?.key);
       refreshData();
     };

@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Définition des types
@@ -101,6 +102,9 @@ export const createOrder = (orderData: Omit<Order, 'id' | 'orderDate' | 'status'
   return newOrder;
 };
 
+// Alias pour createOrder pour une meilleure compatibilité
+export const addOrder = createOrder;
+
 export const getOrders = (): Order[] => {
   return getOrdersFromLocalStorage();
 };
@@ -145,6 +149,56 @@ export const setMonthlyTotal = (total: number): void => {
 };
 
 /**
+ * Recalcule les totaux des commandes (hebdomadaire et mensuel)
+ */
+export const recalculateOrderTotals = (): void => {
+  const orders = getOrdersFromLocalStorage();
+  
+  // Get current date for comparisons
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  // Calculate weekly and monthly totals
+  let weeklyTotal = 0;
+  let monthlyTotal = 0;
+  
+  orders.forEach(order => {
+    const orderDate = new Date(order.orderDate);
+    if (orderDate >= startOfWeek) {
+      weeklyTotal += order.quantity;
+    }
+    
+    if (orderDate >= startOfMonth) {
+      monthlyTotal += order.quantity;
+    }
+  });
+  
+  // Update the storage
+  setWeeklyTotal(weeklyTotal);
+  setMonthlyTotal(monthlyTotal);
+  
+  console.log('Order totals recalculated:', { weeklyTotal, monthlyTotal });
+};
+
+/**
+ * Synchronize all orders with external database
+ * This is a placeholder function that would typically connect to a backend
+ */
+export const syncAllOrdersToSupabase = async (): Promise<void> => {
+  console.log('Synchronizing orders with external database...');
+  // In a real implementation, this would send data to Supabase
+  // For now, just trigger an event to simulate synchronization
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('ordersSynced'));
+    console.log('Orders synchronized with external database');
+  }, 500);
+};
+
+/**
  * Configure les écouteurs pour la communication entre les onglets et les plateformes.
  */
 export function setupBroadcastListeners(): BroadcastChannel | null {
@@ -180,32 +234,33 @@ export function triggerSyncEvent(): void {
   try {
     localStorage.setItem('sync_timestamp', new Date().toISOString());
     console.log('Synchronization event triggered across platforms');
-    return; // Make sure to return void here
   } catch (error) {
     console.error('Error triggering sync event:', error);
-    return; // Make sure to return void here
   }
 }
 
 /**
  * Force la synchronisation sur toutes les plateformes connectées
  */
-export function forceSyncAllPlatforms(): void {
-  // Synchroniser via localStorage pour les onglets
-  localStorage.setItem('force_sync_timestamp', new Date().toISOString());
-  
-  // Utiliser BroadcastChannel pour les fenêtres et les applications PWA
-  try {
-    const syncChannel = new BroadcastChannel('chataciment_sync');
-    syncChannel.postMessage({
-      type: 'FORCE_SYNC',
-      timestamp: new Date().toISOString()
-    });
-    syncChannel.close();
-    console.log('Force sync sent to all connected platforms');
-    return; // Make sure to return void here
-  } catch (error) {
-    console.warn('BroadcastChannel not supported or error:', error);
-    return; // Make sure to return void here
-  }
+export function forceSyncAllPlatforms(): Promise<void> {
+  return new Promise((resolve) => {
+    // Synchroniser via localStorage pour les onglets
+    localStorage.setItem('force_sync_timestamp', new Date().toISOString());
+    
+    // Utiliser BroadcastChannel pour les fenêtres et les applications PWA
+    try {
+      const syncChannel = new BroadcastChannel('chataciment_sync');
+      syncChannel.postMessage({
+        type: 'FORCE_SYNC',
+        timestamp: new Date().toISOString()
+      });
+      syncChannel.close();
+      console.log('Force sync sent to all connected platforms');
+    } catch (error) {
+      console.warn('BroadcastChannel not supported or error:', error);
+    }
+    
+    // Résoudre la promesse après un court délai pour permettre la propagation
+    setTimeout(resolve, 100);
+  });
 }

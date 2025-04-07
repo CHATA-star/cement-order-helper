@@ -27,7 +27,7 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
   const [isLoading, setIsLoading] = useState(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
   const refreshIntervalRef = useRef<number | null>(null);
-  const visibilityCallbackRef = useRef<() => void | null>(null);
+  const visibilityCallbackRef = useRef<(() => void) | null>(null);
 
   // Fonction pour charger manuellement les valeurs
   const loadValues = () => {
