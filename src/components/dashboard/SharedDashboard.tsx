@@ -23,6 +23,7 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
   const [weeklyTotal, setWeeklyTotal] = useState<number>(0);
   const [monthlyTotal, setMonthlyTotal] = useState<number>(0);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fonction pour charger manuellement les valeurs
   const loadValues = () => {
@@ -47,8 +48,9 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     // Charger les valeurs initiales
     loadValues();
     
-    // Configurer un intervalle pour rafraîchir les valeurs régulièrement
-    const refreshInterval = setInterval(loadValues, 30000); // Rafraîchir toutes les 30 secondes
+    // Configurer un intervalle pour rafraîchir les valeurs plus fréquemment sur mobile
+    // Les appareils mobiles ont besoin de mises à jour plus fréquentes pour assurer la synchronisation
+    const refreshInterval = setInterval(loadValues, isMobile ? 15000 : 30000); 
     
     // Écouter les événements pour les mises à jour manuelles
     window.addEventListener('storage', loadValues);
@@ -57,6 +59,17 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     window.addEventListener('syncEvent', loadValues);
     window.addEventListener('forceDataRefresh', loadValues);
     
+    // Configurer un effet de rafraîchissement supplémentaire pour les appareils mobiles
+    // en cas de retour sur l'application après mise en veille
+    if (isMobile) {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          console.log("Mobile app became visible, refreshing data");
+          loadValues();
+        }
+      });
+    }
+    
     return () => {
       clearInterval(refreshInterval);
       window.removeEventListener('storage', loadValues);
@@ -64,10 +77,15 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
       window.removeEventListener('stockUpdated', loadValues);
       window.removeEventListener('syncEvent', loadValues);
       window.removeEventListener('forceDataRefresh', loadValues);
+      
+      if (isMobile) {
+        document.removeEventListener('visibilitychange', () => {});
+      }
     };
-  }, []);
+  }, [isMobile]);
 
   const handleRefresh = () => {
+    setIsLoading(true);
     loadValues();
     
     // Permettre les modifications même en production pour les administrateurs
@@ -79,6 +97,11 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
       title: "Données actualisées",
       description: "Les informations du tableau de bord ont été mises à jour."
     });
+    
+    // Ajouter un délai pour l'animation de chargement
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
   };
 
   return (
@@ -92,42 +115,43 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
           size="sm"
           onClick={handleRefresh}
           className="flex items-center gap-2 text-xs"
+          disabled={isLoading}
         >
-          <RefreshCw className="h-3 w-3" />
-          Actualiser
+          <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
+          {isLoading ? "Actualisation..." : "Actualiser"}
         </Button>
       </div>
       
       <div className={`grid grid-cols-1 ${!isMobile ? "md:grid-cols-3" : ""} gap-4`}>
-        {/* Stock disponible */}
+        {/* Stock disponible - Optimisé pour mobile avec icônes plus visibles */}
         <Card className="bg-amber-50/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-amber-700">Stock disponible</CardTitle>
+          <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
+            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium text-amber-700`}>Stock disponible</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-800">{availableStock} tonnes</div>
+          <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
+            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-amber-800`}>{availableStock} tonnes</div>
             <p className="text-xs text-amber-600">Capacité restante</p>
           </CardContent>
         </Card>
         
         {/* Commandes hebdomadaires */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
+          <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
+            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes de la semaine</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{weeklyTotal} tonnes</div>
+          <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
+            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold`}>{weeklyTotal} tonnes</div>
             <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
           </CardContent>
         </Card>
         
         {/* Commandes mensuelles */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
+          <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
+            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes du mois</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{monthlyTotal} tonnes</div>
+          <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
+            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold`}>{monthlyTotal} tonnes</div>
             <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
           </CardContent>
         </Card>
