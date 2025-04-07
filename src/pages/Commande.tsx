@@ -9,7 +9,7 @@ import { Building, Package, MapPin, CheckCircle2, MessageCircle } from "lucide-r
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAvailableStock, setupBroadcastListeners } from "@/services/orderService";
+import { getAvailableStock, setupBroadcastListeners, forceSyncAllPlatforms } from "@/services/orderService";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Commande = () => {
@@ -25,27 +25,36 @@ const Commande = () => {
       setIsAdmin(true);
     }
     
-    // Configurer les écouteurs pour la communication entre onglets
-    setupBroadcastListeners();
+    // Configurer les écouteurs pour la communication entre onglets et plateformes
+    const broadcastChannel = setupBroadcastListeners();
     
     // Déclenchement d'un événement pour forcer la mise à jour des données
     window.dispatchEvent(new CustomEvent('forceDataRefresh'));
     
-    // Pour les appareils mobiles, on effectue des mises à jour plus fréquentes quand
-    // l'utilisateur revient à l'application
+    // Synchronisation forcée pour assurer la cohérence sur toutes les plateformes
+    forceSyncAllPlatforms();
+    
+    // Écouteur pour les changements de visibilité (passage en premier plan/arrière-plan)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log("Commande page became visible, forcing refresh");
         window.dispatchEvent(new CustomEvent('forceDataRefresh'));
+        forceSyncAllPlatforms();
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
+    // Synchronisation périodique pour les appareils mobiles
+    const syncInterval = isMobile ? 
+      setInterval(() => forceSyncAllPlatforms(), 60000) : null;
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (syncInterval) clearInterval(syncInterval);
+      if (broadcastChannel) broadcastChannel.close();
     };
-  }, [location]);
+  }, [location, isMobile]);
 
   return (
     <MainLayout>

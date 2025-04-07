@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -8,7 +8,8 @@ import {
   getAvailableStock, 
   getWeeklyTotal, 
   getMonthlyTotal,
-  triggerSyncEvent
+  triggerSyncEvent,
+  setupBroadcastListeners
 } from "@/services/orderService";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -24,6 +25,9 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
   const [monthlyTotal, setMonthlyTotal] = useState<number>(0);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+  const refreshIntervalRef = useRef<number | null>(null);
+  const visibilityCallbackRef = useRef<() => void | null>(null);
 
   // Fonction pour charger manuellement les valeurs
   const loadValues = () => {
@@ -48,9 +52,13 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     // Charger les valeurs initiales
     loadValues();
     
-    // Configurer un intervalle pour rafraîchir les valeurs plus fréquemment sur mobile
+    // Configurer un intervalle pour rafraîchir les valeurs régulièrement
     // Les appareils mobiles ont besoin de mises à jour plus fréquentes pour assurer la synchronisation
-    const refreshInterval = setInterval(loadValues, isMobile ? 15000 : 30000); 
+    const refreshInterval = setInterval(loadValues, isMobile ? 15000 : 30000);
+    refreshIntervalRef.current = refreshInterval as unknown as number;
+    
+    // Configurer le canal de broadcast pour une communication en temps réel
+    broadcastChannelRef.current = setupBroadcastListeners();
     
     // Écouter les événements pour les mises à jour manuelles
     window.addEventListener('storage', loadValues);
@@ -62,24 +70,41 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     // Configurer un effet de rafraîchissement supplémentaire pour les appareils mobiles
     // en cas de retour sur l'application après mise en veille
     if (isMobile) {
-      document.addEventListener('visibilitychange', () => {
+      const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
           console.log("Mobile app became visible, refreshing data");
           loadValues();
+          triggerSyncEvent(); // Demander une mise à jour à toutes les instances
         }
-      });
+      };
+      
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      visibilityCallbackRef.current = handleVisibilityChange;
     }
     
+    // Exécuter une synchronisation forcée au chargement
+    triggerSyncEvent();
+    
     return () => {
-      clearInterval(refreshInterval);
+      // Nettoyer tous les écouteurs et intervalles
+      if (refreshIntervalRef.current !== null) {
+        clearInterval(refreshIntervalRef.current);
+      }
+      
       window.removeEventListener('storage', loadValues);
       window.removeEventListener('orderUpdated', loadValues);
       window.removeEventListener('stockUpdated', loadValues);
       window.removeEventListener('syncEvent', loadValues);
       window.removeEventListener('forceDataRefresh', loadValues);
       
-      if (isMobile) {
-        document.removeEventListener('visibilitychange', () => {});
+      // Fermer le canal de broadcast si ouvert
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.close();
+      }
+      
+      // Supprimer l'écouteur de visibilité si configuré
+      if (isMobile && visibilityCallbackRef.current) {
+        document.removeEventListener('visibilitychange', visibilityCallbackRef.current);
       }
     };
   }, [isMobile]);
@@ -95,7 +120,7 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
     
     toast({
       title: "Données actualisées",
-      description: "Les informations du tableau de bord ont été mises à jour."
+      description: "Les informations du tableau de bord ont été mises à jour sur toutes les plateformes."
     });
     
     // Ajouter un délai pour l'animation de chargement
@@ -137,21 +162,21 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
         {/* Commandes hebdomadaires */}
         <Card>
           <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
-            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes de la semaine</CardTitle>
+            <CardTitle className={`${iMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes de la semaine</CardTitle>
           </CardHeader>
           <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
-            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold`}>{weeklyTotal} tonnes</div>
+            <div className={`${iMobile ? "text-xl" : "text-2xl"} font-bold`}>{weeklyTotal} tonnes</div>
             <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
           </CardContent>
         </Card>
         
         {/* Commandes mensuelles */}
         <Card>
-          <CardHeader className={`${isMobile ? "py-2 px-3" : "pb-2"}`}>
-            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes du mois</CardTitle>
+          <CardHeader className={`${iMobile ? "py-2 px-3" : "pb-2"}`}>
+            <CardTitle className={`${iMobile ? "text-xs" : "text-sm"} font-medium`}>Commandes du mois</CardTitle>
           </CardHeader>
-          <CardContent className={isMobile ? "pt-0 px-3 pb-3" : ""}>
-            <div className={`${isMobile ? "text-xl" : "text-2xl"} font-bold`}>{monthlyTotal} tonnes</div>
+          <CardContent className={iMobile ? "pt-0 px-3 pb-3" : ""}>
+            <div className={`${iMobile ? "text-xl" : "text-2xl"} font-bold`}>{monthlyTotal} tonnes</div>
             <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
           </CardContent>
         </Card>

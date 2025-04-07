@@ -78,7 +78,7 @@ const syncWithAdminOrders = (order: OrderData) => {
   recalculateOrderTotals();
 };
 
-// Déclencher un événement de synchronisation pour tous les clients
+// Amélioration de la fonction de synchronisation pour toutes les plateformes
 export const triggerSyncEvent = () => {
   console.log("Déclenchement d'un événement de synchronisation global");
   
@@ -90,43 +90,75 @@ export const triggerSyncEvent = () => {
   window.dispatchEvent(new CustomEvent('orderUpdated'));
   window.dispatchEvent(new CustomEvent('stockUpdated'));
   window.dispatchEvent(new CustomEvent('syncEvent', { detail: { timestamp } }));
+  window.dispatchEvent(new CustomEvent('forceDataRefresh'));
   
   // Forcer un événement de stockage qui sera détecté par les autres fenêtres/onglets
   localStorage.setItem('last_update', timestamp);
   
   console.log("Événement de synchronisation déclenché à", timestamp);
   
-  // On peut également utiliser Broadcast Channel API pour une communication plus robuste entre onglets
+  // Utiliser Broadcast Channel API pour une communication plus robuste entre onglets et plateformes
   try {
     const channel = new BroadcastChannel('chata-sync-channel');
     channel.postMessage({ 
       type: 'sync', 
       timestamp, 
-      source: 'orderService'
+      source: 'orderService',
+      data: {
+        stock: getAvailableStock(),
+        weeklyTotal: getWeeklyTotal(),
+        monthlyTotal: getMonthlyTotal(),
+        lastUpdate: timestamp
+      }
     });
-    // Fermer le canal après l'envoi pour libérer les ressources
-    setTimeout(() => channel.close(), 100);
+    
+    // Garder le canal ouvert pendant un moment pour assurer la transmission
+    setTimeout(() => channel.close(), 500);
   } catch (error) {
     console.warn("BroadcastChannel API non supportée:", error);
     // Fallback en continuant avec les autres méthodes de synchronisation
   }
 };
 
-// Configuration des écouteurs pour le canal de broadcast
+// Configuration améliorée des écouteurs pour le canal de broadcast
 export const setupBroadcastListeners = () => {
   try {
     const channel = new BroadcastChannel('chata-sync-channel');
+    
     channel.onmessage = (event) => {
       console.log("Message reçu via BroadcastChannel:", event.data);
+      
+      // Traitement du message en fonction de son type
       if (event.data.type === 'sync') {
+        // Si nous recevons des données complètes, les utiliser directement
+        if (event.data.data) {
+          if (event.data.data.stock !== undefined) {
+            localStorage.setItem(STOCK_KEY, event.data.data.stock.toString());
+          }
+          if (event.data.data.weeklyTotal !== undefined) {
+            localStorage.setItem(WEEKLY_TOTAL_KEY, event.data.data.weeklyTotal.toString());
+          }
+          if (event.data.data.monthlyTotal !== undefined) {
+            localStorage.setItem(MONTHLY_TOTAL_KEY, event.data.data.monthlyTotal.toString());
+          }
+        }
+        
         // Déclencher une mise à jour des données locales
         window.dispatchEvent(new CustomEvent('forceDataRefresh'));
       }
     };
-    // Garder la référence du canal pour pouvoir le fermer plus tard
+    
+    // Demander les dernières données au moment de la connexion
+    channel.postMessage({ 
+      type: 'requestUpdate', 
+      timestamp: new Date().toISOString()
+    });
+    
     console.log("BroadcastChannel configuré avec succès");
+    return channel; // Retourner le canal pour pouvoir le fermer plus tard si nécessaire
   } catch (error) {
     console.warn("BroadcastChannel API non supportée:", error);
+    return null;
   }
 };
 
@@ -307,7 +339,7 @@ export const getStockLastUpdate = (): Date | null => {
   return lastUpdate ? new Date(lastUpdate) : null;
 };
 
-// Définir le stock disponible
+// Définir le stock disponible avec synchronisation améliorée
 export const setAvailableStock = (stock: number): void => {
   // Sauvegarder l'ancien stock pour historique/comparaison
   const oldStock = getAvailableStock();
@@ -321,6 +353,20 @@ export const setAvailableStock = (stock: number): void => {
   
   // Déclencher des événements pour informer toutes les fenêtres/onglets
   triggerSyncEvent();
+  
+  // Notifier directement via BroadcastChannel pour une mise à jour plus rapide
+  try {
+    const channel = new BroadcastChannel('chata-sync-channel');
+    channel.postMessage({
+      type: 'stockUpdate',
+      timestamp,
+      oldValue: oldStock,
+      newValue: stock
+    });
+    setTimeout(() => channel.close(), 100);
+  } catch (error) {
+    console.warn("BroadcastChannel API non supportée pour la mise à jour du stock:", error);
+  }
   
   console.log(`Stock mis à jour: ${oldStock} -> ${stock} tonnes à ${timestamp}`);
 };
@@ -369,4 +415,32 @@ export const recalculateOrderTotals = (): void => {
   setMonthlyTotal(monthlyTotal);
   
   console.log(`Totaux recalculés - Hebdo: ${weeklyTotal}, Mensuel: ${monthlyTotal}`);
+};
+
+// Nouvelle fonction pour forcer une synchronisation complète sur toutes les plateformes
+export const forceSyncAllPlatforms = async (): Promise<void> => {
+  try {
+    // Recalculer les totaux
+    recalculateOrderTotals();
+    
+    // Synchroniser avec Supabase si disponible
+    await syncAllOrdersToSupabase();
+    
+    // Déclencher un événement de synchronisation
+    triggerSyncEvent();
+    
+    // Utiliser le Service Worker si disponible pour une synchronisation encore plus large
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'FORCE_SYNC',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    console.log("Synchronisation forcée sur toutes les plateformes terminée");
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la synchronisation forcée:", error);
+    return false;
+  }
 };

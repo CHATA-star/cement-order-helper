@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
-import { triggerSyncEvent } from "@/services/orderService";
+import { triggerSyncEvent, forceSyncAllPlatforms } from "@/services/orderService";
 
 interface AvailabilityInfoProps {
   availableQuantity: number;
@@ -25,6 +26,7 @@ const AvailabilityInfo = ({
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
   useEffect(() => {
     if (availableQuantity !== prevQuantity) {
@@ -50,6 +52,19 @@ const AvailabilityInfo = ({
       refreshData();
     };
     
+    // Configurer le canal de broadcast pour une communication en temps réel
+    try {
+      const channel = new BroadcastChannel('chata-sync-channel');
+      channel.onmessage = (event) => {
+        if (event.data.type === 'stockUpdate' || event.data.type === 'sync') {
+          refreshData();
+        }
+      };
+      broadcastChannelRef.current = channel;
+    } catch (error) {
+      console.warn("BroadcastChannel API non supportée:", error);
+    }
+    
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('stockUpdated', handleStockUpdate);
     window.addEventListener('syncEvent', handleStockUpdate);
@@ -60,6 +75,10 @@ const AvailabilityInfo = ({
       window.removeEventListener('stockUpdated', handleStockUpdate);
       window.removeEventListener('syncEvent', handleStockUpdate);
       window.removeEventListener('forceDataRefresh', handleForceRefresh);
+      
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.close();
+      }
     };
   }, []);
 
@@ -87,11 +106,12 @@ const AvailabilityInfo = ({
     setIsEditing(false);
     setLastUpdateTime(new Date());
     
-    triggerSyncEvent();
-    
-    toast({
-      title: "Stock mis à jour",
-      description: `Le stock disponible a été actualisé à ${tempQuantity} tonnes.`
+    // Utiliser la fonction de synchronisation complète pour mettre à jour toutes les plateformes
+    forceSyncAllPlatforms().then(() => {
+      toast({
+        title: "Stock mis à jour partout",
+        description: `Le stock disponible a été actualisé à ${tempQuantity} tonnes sur toutes les plateformes.`
+      });
     });
   };
 
@@ -150,10 +170,15 @@ const AvailabilityInfo = ({
               size="icon"
               onClick={() => {
                 refreshData();
-                window.dispatchEvent(new CustomEvent('forceDataRefresh'));
-                localStorage.setItem('sync_timestamp', new Date().toISOString());
+                // Forcer une mise à jour complète sur toutes les plateformes
+                forceSyncAllPlatforms().then(() => {
+                  toast({
+                    title: "Synchronisation terminée",
+                    description: "Toutes les plateformes affichent désormais les mêmes informations."
+                  });
+                });
               }}
-              title="Rafraîchir les données"
+              title="Rafraîchir les données sur toutes les plateformes"
               className="h-8 w-8"
             >
               <RefreshCw className="h-4 w-4 text-cement-600" />
