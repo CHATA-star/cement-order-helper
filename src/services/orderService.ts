@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 // Définition des types
@@ -121,6 +120,9 @@ export const updateOrder = (id: string, updates: Partial<Order>): Order | undefi
   // Recalculer les totaux après la modification d'une commande
   recalculateOrderTotals();
   
+  // Notifier les autres composants sur toutes les plateformes
+  triggerSyncEvent();
+  
   return updatedOrders.find(order => order.id === id);
 };
 
@@ -131,6 +133,9 @@ export const deleteOrder = (id: string): void => {
   
   // Recalculer les totaux après la suppression d'une commande
   recalculateOrderTotals();
+  
+  // Notifier les autres composants sur toutes les plateformes
+  triggerSyncEvent();
 };
 
 // Fonctions de gestion du stock
@@ -161,6 +166,7 @@ export const setMonthlyTotal = (total: number): void => {
 
 /**
  * Recalcule les totaux des commandes (hebdomadaire et mensuel)
+ * et met à jour le stock disponible automatiquement
  */
 export const recalculateOrderTotals = (): void => {
   const orders = getOrdersFromLocalStorage();
@@ -176,11 +182,16 @@ export const recalculateOrderTotals = (): void => {
   // Calculate weekly and monthly totals
   let weeklyTotal = 0;
   let monthlyTotal = 0;
+  let totalOrdered = 0;
   
   orders.forEach(order => {
     // Ne compter que les commandes qui ne sont pas annulées
     if (order.status !== 'cancelled') {
       const orderDate = new Date(order.orderDate);
+      
+      // Ajouter au total des commandes
+      totalOrdered += order.quantity;
+      
       if (orderDate >= startOfWeek) {
         weeklyTotal += order.quantity;
       }
@@ -191,11 +202,22 @@ export const recalculateOrderTotals = (): void => {
     }
   });
   
+  // Calculer le stock disponible (stock initial - commandes)
+  // Utilisons 1000 tonnes comme stock initial pour cet exemple
+  const INITIAL_STOCK = 1000;
+  const availableStock = Math.max(0, INITIAL_STOCK - totalOrdered);
+  
   // Update the storage
   setWeeklyTotal(weeklyTotal);
   setMonthlyTotal(monthlyTotal);
+  setAvailableStock(availableStock);
   
-  console.log('Order totals recalculated:', { weeklyTotal, monthlyTotal, ordersCount: orders.length });
+  console.log('Order totals recalculated:', { 
+    weeklyTotal, 
+    monthlyTotal, 
+    availableStock,
+    ordersCount: orders.length 
+  });
 };
 
 /**

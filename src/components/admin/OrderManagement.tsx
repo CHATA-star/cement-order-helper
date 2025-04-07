@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,21 @@ const OrderManagement = () => {
     triggerSyncEvent();
     
     // Recalculate totals after deletion
+    recalculateOrderTotals();
+  };
+  
+  const updateOrderDetails = (id: string, updates: Partial<Order>) => {
+    const updatedOrders = orders.map(order =>
+      order.id === id ? { ...order, ...updates } : order
+    );
+    
+    setOrders(updatedOrders);
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedOrders));
+    
+    // Trigger sync event to update all components
+    triggerSyncEvent();
+    
+    // Recalculate totals after update
     recalculateOrderTotals();
   };
   
@@ -297,6 +313,7 @@ const OrderManagement = () => {
             updateOrderStatus={updateOrderStatus}
             deleteOrder={deleteOrder}
             addOrder={addOrder}
+            updateOrderDetails={updateOrderDetails}
           />
         </div>
       </CardContent>

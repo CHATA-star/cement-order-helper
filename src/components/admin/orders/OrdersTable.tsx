@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Order } from "@/types/order";
@@ -7,7 +7,7 @@ import OrderStatusBadge from "./OrderStatusBadge";
 import OrderActions from "./OrderActions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Plus, Trash } from "lucide-react";
+import { ChevronDown, Pencil, Plus, Save, Trash, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ interface OrdersTableProps {
   updateOrderStatus: (id: string, status: "completed" | "pending" | "cancelled") => void;
   deleteOrder?: (id: string) => void;
   addOrder?: (order: Omit<Order, "id">) => void;
+  updateOrderDetails?: (id: string, updates: Partial<Order>) => void;
 }
 
 const OrdersTable = ({ 
@@ -30,7 +31,8 @@ const OrdersTable = ({
   toggleEditStatus, 
   updateOrderStatus,
   deleteOrder,
-  addOrder
+  addOrder,
+  updateOrderDetails
 }: OrdersTableProps) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -42,7 +44,11 @@ const OrdersTable = ({
       status: "pending" as const,
     }
   });
-
+  
+  // État pour suivre quelle commande est en cours d'édition complète
+  const [editingFullOrderId, setEditingFullOrderId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<Order>>({});
+  
   const onSubmit = (data) => {
     if (addOrder) {
       // Add current date to the order
@@ -76,6 +82,45 @@ const OrdersTable = ({
     }
   };
   
+  // Fonction pour commencer l'édition complète d'une commande
+  const startEditOrder = (order: Order) => {
+    setEditingFullOrderId(order.id);
+    setEditFormData({
+      client: order.client,
+      city: order.city,
+      quantity: order.quantity,
+      date: order.date
+    });
+  };
+  
+  // Fonction pour annuler l'édition
+  const cancelEditOrder = () => {
+    setEditingFullOrderId(null);
+    setEditFormData({});
+  };
+  
+  // Fonction pour mettre à jour les données du formulaire d'édition
+  const handleEditFormChange = (field: string, value: any) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Fonction pour sauvegarder les modifications
+  const saveOrderChanges = (id: string) => {
+    if (updateOrderDetails && editFormData) {
+      updateOrderDetails(id, editFormData);
+      setEditingFullOrderId(null);
+      setEditFormData({});
+      
+      toast({
+        title: "Commande mise à jour",
+        description: "Les détails de la commande ont été mis à jour avec succès"
+      });
+    }
+  };
+  
   const renderMobileOrderCard = (order: Order) => (
     <div className="border rounded-lg mb-3 overflow-hidden bg-white">
       <div className="bg-cement-100 p-2 flex items-center justify-between">
@@ -86,58 +131,131 @@ const OrdersTable = ({
         <OrderStatusBadge status={order.status} />
       </div>
       <div className="p-3 space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="font-medium">Client:</span> 
-          <span>{order.client}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-medium">Ville:</span> 
-          <span>{order.city}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-medium">Quantité:</span> 
-          <span>{order.quantity} tonnes</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-medium">Date:</span> 
-          <span>{new Date(order.date).toLocaleDateString()}</span>
-        </div>
-      </div>
-      <div className="border-t p-2 flex justify-between gap-2">
-        {editingOrderId === order.id ? (
-          <Select 
-            defaultValue={order.status}
-            onValueChange={(value) => updateOrderStatus(order.id, value as "completed" | "pending" | "cancelled")}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Changer le statut" />
-            </SelectTrigger>
-            <SelectContent className="bg-white">
-              <SelectItem value="pending">En attente</SelectItem>
-              <SelectItem value="completed">Livré</SelectItem>
-              <SelectItem value="cancelled">Annulé</SelectItem>
-            </SelectContent>
-          </Select>
+        {editingFullOrderId === order.id ? (
+          <>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs font-medium">Client:</label>
+                <Input 
+                  value={editFormData.client || ''}
+                  onChange={(e) => handleEditFormChange('client', e.target.value)}
+                  className="h-8 mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">Ville:</label>
+                <Input 
+                  value={editFormData.city || ''}
+                  onChange={(e) => handleEditFormChange('city', e.target.value)}
+                  className="h-8 mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">Quantité (tonnes):</label>
+                <Input 
+                  type="number"
+                  value={editFormData.quantity || 0}
+                  onChange={(e) => handleEditFormChange('quantity', Number(e.target.value))}
+                  className="h-8 mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">Date:</label>
+                <Input 
+                  type="date"
+                  value={editFormData.date ? editFormData.date.split('T')[0] : ''}
+                  onChange={(e) => handleEditFormChange('date', e.target.value)}
+                  className="h-8 mt-1"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={cancelEditOrder}
+                className="h-7 text-xs"
+              >
+                <X className="h-3 w-3 mr-1" /> Annuler
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => saveOrderChanges(order.id)}
+                className="h-7 text-xs"
+              >
+                <Save className="h-3 w-3 mr-1" /> Enregistrer
+              </Button>
+            </div>
+          </>
         ) : (
           <>
-            <OrderActions 
-              order={order} 
-              editingOrderId={editingOrderId}
-              toggleEditStatus={toggleEditStatus}
-              updateOrderStatus={updateOrderStatus}
-            />
-            {deleteOrder && (
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => handleDeleteOrder(order.id)}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex justify-between">
+              <span className="font-medium">Client:</span> 
+              <span>{order.client}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Ville:</span> 
+              <span>{order.city}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Quantité:</span> 
+              <span>{order.quantity} tonnes</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Date:</span> 
+              <span>{new Date(order.date).toLocaleDateString()}</span>
+            </div>
           </>
         )}
       </div>
+      {!editingFullOrderId && (
+        <div className="border-t p-2 flex justify-between gap-2">
+          {editingOrderId === order.id ? (
+            <Select 
+              defaultValue={order.status}
+              onValueChange={(value) => updateOrderStatus(order.id, value as "completed" | "pending" | "cancelled")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Changer le statut" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="pending">En attente</SelectItem>
+                <SelectItem value="completed">Livré</SelectItem>
+                <SelectItem value="cancelled">Annulé</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <OrderActions 
+                  order={order} 
+                  editingOrderId={editingOrderId}
+                  toggleEditStatus={toggleEditStatus}
+                  updateOrderStatus={updateOrderStatus}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => startEditOrder(order)}
+                  className="text-xs px-2 py-1 h-8"
+                >
+                  <Pencil className="h-3 w-3 mr-1" /> Modifier
+                </Button>
+              </div>
+              {deleteOrder && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => handleDeleteOrder(order.id)}
+                  className="text-xs px-2 py-1 h-8"
+                >
+                  <Trash className="h-3 w-3" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
   
@@ -264,10 +382,52 @@ const OrdersTable = ({
               orders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.client}</TableCell>
-                  <TableCell>{order.city}</TableCell>
-                  <TableCell>{order.quantity} tonnes</TableCell>
-                  <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {editingFullOrderId === order.id ? (
+                      <Input 
+                        value={editFormData.client || ''} 
+                        onChange={(e) => handleEditFormChange('client', e.target.value)}
+                        className="h-8"
+                      />
+                    ) : (
+                      order.client
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingFullOrderId === order.id ? (
+                      <Input 
+                        value={editFormData.city || ''} 
+                        onChange={(e) => handleEditFormChange('city', e.target.value)}
+                        className="h-8"
+                      />
+                    ) : (
+                      order.city
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingFullOrderId === order.id ? (
+                      <Input 
+                        type="number" 
+                        value={editFormData.quantity || 0} 
+                        onChange={(e) => handleEditFormChange('quantity', Number(e.target.value))}
+                        className="h-8 w-24"
+                      />
+                    ) : (
+                      `${order.quantity} tonnes`
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingFullOrderId === order.id ? (
+                      <Input 
+                        type="date" 
+                        value={editFormData.date ? editFormData.date.split('T')[0] : ''} 
+                        onChange={(e) => handleEditFormChange('date', e.target.value)}
+                        className="h-8"
+                      />
+                    ) : (
+                      new Date(order.date).toLocaleDateString()
+                    )}
+                  </TableCell>
                   <TableCell>
                     {editingOrderId === order.id ? (
                       <Select 
@@ -290,23 +450,48 @@ const OrdersTable = ({
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <OrderActions 
-                        order={order} 
-                        editingOrderId={editingOrderId}
-                        toggleEditStatus={toggleEditStatus}
-                        updateOrderStatus={updateOrderStatus}
-                      />
-                      {deleteOrder && (
+                    {editingFullOrderId === order.id ? (
+                      <div className="flex justify-end gap-2">
                         <Button 
-                          variant="destructive" 
+                          variant="outline" 
                           size="sm" 
-                          onClick={() => handleDeleteOrder(order.id)}
+                          onClick={cancelEditOrder}
                         >
-                          <Trash className="h-4 w-4" />
+                          <X className="h-4 w-4 mr-1" /> Annuler
                         </Button>
-                      )}
-                    </div>
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveOrderChanges(order.id)}
+                        >
+                          <Save className="h-4 w-4 mr-1" /> Enregistrer
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end gap-2">
+                        <OrderActions 
+                          order={order} 
+                          editingOrderId={editingOrderId}
+                          toggleEditStatus={toggleEditStatus}
+                          updateOrderStatus={updateOrderStatus}
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => startEditOrder(order)}
+                        >
+                          <Pencil className="h-4 w-4 mr-1" /> Modifier
+                        </Button>
+                        {deleteOrder && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => handleDeleteOrder(order.id)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
