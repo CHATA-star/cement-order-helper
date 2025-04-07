@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw } from "lucide-react";
+import { Download, RefreshCw, Save, Upload } from "lucide-react";
 import OrdersTable from "./orders/OrdersTable";
 import OrderSearch from "./orders/OrderSearch";
 import { Order, mockOrders } from "@/types/order";
@@ -19,6 +19,7 @@ const OrderManagement = () => {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [showStoragePanel, setShowStoragePanel] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -163,6 +164,74 @@ const OrderManagement = () => {
     });
   };
 
+  // Nouvelle fonction pour sauvegarder les commandes actuelles dans un stockage permanent
+  const saveOrdersToStorage = () => {
+    const timestamp = new Date().toISOString().split('T')[0];
+    const storageKey = `orders_backup_${timestamp}`;
+    
+    // Sauvegarder les commandes avec une clé datée
+    localStorage.setItem(storageKey, JSON.stringify(orders));
+    
+    toast({
+      title: "Sauvegarde réussie",
+      description: `${orders.length} commandes sauvegardées avec l'identifiant: ${timestamp}`
+    });
+  };
+
+  // Fonction pour afficher les sauvegardes disponibles
+  const toggleStoragePanel = () => {
+    setShowStoragePanel(!showStoragePanel);
+  };
+
+  // Récupérer la liste des sauvegardes disponibles
+  const getStorageBackups = () => {
+    const backups = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('orders_backup_')) {
+        const date = key.replace('orders_backup_', '');
+        const count = JSON.parse(localStorage.getItem(key) || '[]').length;
+        backups.push({ date, count, key });
+      }
+    }
+    return backups.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
+
+  // Charger une sauvegarde spécifique
+  const loadBackup = (key: string) => {
+    const backup = localStorage.getItem(key);
+    if (backup) {
+      const backupOrders = JSON.parse(backup);
+      setOrders(backupOrders);
+      localStorage.setItem(ORDER_STORAGE_KEY, backup);
+      
+      // Trigger sync event to update all components
+      triggerSyncEvent();
+      
+      // Recalculate totals after loading backup
+      recalculateOrderTotals();
+      
+      toast({
+        title: "Sauvegarde chargée",
+        description: `${backupOrders.length} commandes restaurées depuis la sauvegarde du ${key.replace('orders_backup_', '')}`
+      });
+    }
+  };
+
+  // Supprimer une sauvegarde spécifique
+  const deleteBackup = (key: string) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer cette sauvegarde du ${key.replace('orders_backup_', '')} ?`)) {
+      localStorage.removeItem(key);
+      toast({
+        title: "Sauvegarde supprimée",
+        description: `La sauvegarde du ${key.replace('orders_backup_', '')} a été supprimée`
+      });
+      // Forcer la mise à jour de l'interface
+      setShowStoragePanel(false);
+      setTimeout(() => setShowStoragePanel(true), 10);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className={`${isMobile ? "p-3 pb-0" : ""} flex flex-col gap-2`}>
@@ -179,9 +248,45 @@ const OrderManagement = () => {
             <Download className="h-4 w-4 mr-2" />
             Exporter CSV
           </Button>
+          <Button variant="outline" className="w-full md:w-auto" onClick={saveOrdersToStorage}>
+            <Save className="h-4 w-4 mr-2" />
+            Sauvegarder
+          </Button>
+          <Button variant="outline" className="w-full md:w-auto" onClick={toggleStoragePanel}>
+            <Upload className="h-4 w-4 mr-2" />
+            Historique
+          </Button>
         </div>
       </CardHeader>
       <CardContent className={isMobile ? "p-3" : ""}>
+        {showStoragePanel && (
+          <div className="mb-6 p-4 border rounded-md bg-gray-50">
+            <h3 className="text-lg font-medium mb-3">Historique des sauvegardes</h3>
+            {getStorageBackups().length === 0 ? (
+              <p className="text-gray-500">Aucune sauvegarde disponible</p>
+            ) : (
+              <div className="space-y-2">
+                {getStorageBackups().map((backup) => (
+                  <div key={backup.key} className="flex items-center justify-between p-2 bg-white rounded border">
+                    <div>
+                      <span className="font-medium">{backup.date}</span>
+                      <span className="text-sm text-gray-500 ml-2">({backup.count} commandes)</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => loadBackup(backup.key)}>
+                        Charger
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteBackup(backup.key)}>
+                        Supprimer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
         <div className="space-y-4">
           <OrderSearch onSearch={setSearchTerm} />
           <OrdersTable
