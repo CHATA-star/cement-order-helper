@@ -99,6 +99,10 @@ export const createOrder = (orderData: Omit<Order, 'id' | 'orderDate' | 'status'
   };
   const orders = getOrdersFromLocalStorage();
   saveOrdersToLocalStorage([...orders, newOrder]);
+  
+  // Recalculer les totaux après la création d'une commande
+  recalculateOrderTotals();
+  
   return newOrder;
 };
 
@@ -113,6 +117,10 @@ export const updateOrder = (id: string, updates: Partial<Order>): Order | undefi
   const orders = getOrdersFromLocalStorage();
   const updatedOrders = orders.map(order => order.id === id ? { ...order, ...updates } : order);
   saveOrdersToLocalStorage(updatedOrders);
+  
+  // Recalculer les totaux après la modification d'une commande
+  recalculateOrderTotals();
+  
   return updatedOrders.find(order => order.id === id);
 };
 
@@ -120,6 +128,9 @@ export const deleteOrder = (id: string): void => {
   const orders = getOrdersFromLocalStorage();
   const updatedOrders = orders.filter(order => order.id !== id);
   saveOrdersToLocalStorage(updatedOrders);
+  
+  // Recalculer les totaux après la suppression d'une commande
+  recalculateOrderTotals();
 };
 
 // Fonctions de gestion du stock
@@ -167,13 +178,16 @@ export const recalculateOrderTotals = (): void => {
   let monthlyTotal = 0;
   
   orders.forEach(order => {
-    const orderDate = new Date(order.orderDate);
-    if (orderDate >= startOfWeek) {
-      weeklyTotal += order.quantity;
-    }
-    
-    if (orderDate >= startOfMonth) {
-      monthlyTotal += order.quantity;
+    // Ne compter que les commandes qui ne sont pas annulées
+    if (order.status !== 'cancelled') {
+      const orderDate = new Date(order.orderDate);
+      if (orderDate >= startOfWeek) {
+        weeklyTotal += order.quantity;
+      }
+      
+      if (orderDate >= startOfMonth) {
+        monthlyTotal += order.quantity;
+      }
     }
   });
   
@@ -181,7 +195,7 @@ export const recalculateOrderTotals = (): void => {
   setWeeklyTotal(weeklyTotal);
   setMonthlyTotal(monthlyTotal);
   
-  console.log('Order totals recalculated:', { weeklyTotal, monthlyTotal });
+  console.log('Order totals recalculated:', { weeklyTotal, monthlyTotal, ordersCount: orders.length });
 };
 
 /**
@@ -244,6 +258,9 @@ export function triggerSyncEvent(): void {
  */
 export function forceSyncAllPlatforms(): Promise<void> {
   return new Promise((resolve) => {
+    // Recalculate order totals first
+    recalculateOrderTotals();
+    
     // Synchroniser via localStorage pour les onglets
     localStorage.setItem('force_sync_timestamp', new Date().toISOString());
     

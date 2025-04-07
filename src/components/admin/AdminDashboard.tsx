@@ -15,6 +15,7 @@ import {
   setWeeklyTotal, 
   setMonthlyTotal,
   triggerSyncEvent,
+  recalculateOrderTotals
 } from "@/services/orderService";
 import SharedDashboard from "@/components/dashboard/SharedDashboard";
 
@@ -34,6 +35,9 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   // Fonction pour charger manuellement les valeurs
   const loadValues = () => {
+    // S'assurer d'abord que les totaux sont recalculés à partir des commandes réelles
+    recalculateOrderTotals();
+    
     const currentStock = getAvailableStock();
     
     setAvailableStockState(currentStock.toString());

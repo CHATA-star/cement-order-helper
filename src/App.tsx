@@ -13,7 +13,7 @@ import NotFound from "./pages/NotFound";
 import Reviews from "./pages/Reviews";
 import Admin from "./pages/Admin";
 import { syncLocalUsersToSupabase } from "./services/userService";
-import { forceSyncAllPlatforms } from "./services/orderService";
+import { forceSyncAllPlatforms, recalculateOrderTotals } from "./services/orderService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Créer une instance de QueryClient avec une configuration pour la mise en cache
@@ -31,10 +31,15 @@ const App = () => {
     // Fonction pour synchroniser toutes les données
     const syncAllData = async () => {
       try {
+        // Recalculer d'abord les totaux basés sur les commandes existantes
+        recalculateOrderTotals();
+        
         // Synchroniser les utilisateurs
         await syncLocalUsersToSupabase();
+        
         // Forcer la synchronisation des données entre les plateformes
         await forceSyncAllPlatforms();
+        
         console.log("Synchronisation complète des données terminée");
       } catch (err) {
         console.error("Erreur lors de la synchronisation des données:", err);

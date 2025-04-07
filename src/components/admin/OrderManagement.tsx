@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import OrdersTable from "./orders/OrdersTable";
 import OrderSearch from "./orders/OrderSearch";
 import { Order, mockOrders } from "@/types/order";
 import { useToast } from "@/hooks/use-toast";
-import { triggerSyncEvent, forceSyncAllPlatforms } from "@/services/orderService";
+import { triggerSyncEvent, forceSyncAllPlatforms, recalculateOrderTotals } from "@/services/orderService";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const ORDER_STORAGE_KEY = "admin_orders";
@@ -59,10 +58,17 @@ const OrderManagement = () => {
       setOrders(mockOrders);
       localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(mockOrders));
     }
+    
+    // Recalculer les totaux basés sur les données réelles après chargement des commandes
+    recalculateOrderTotals();
   };
   
   const handleRefresh = () => {
     loadOrders();
+    
+    // Forcer une synchronisation complète avec toutes les plateformes
+    forceSyncAllPlatforms();
+    
     toast({
       title: "Données actualisées",
       description: "La liste des commandes a été mise à jour"
@@ -85,50 +91,13 @@ const OrderManagement = () => {
     // Trigger sync event to update all components
     triggerSyncEvent();
     
-    // Recalculate totals
+    // Recalculate totals after status update
     recalculateOrderTotals();
     
     toast({
       title: "Statut mis à jour",
       description: `La commande ${id} a été mise à jour avec succès`,
     });
-  };
-  
-  // Local function to recalculate order totals
-  const recalculateOrderTotals = () => {
-    // Get current date for comparisons
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-    
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    // Calculate weekly and monthly totals
-    let weeklyTotal = 0;
-    let monthlyTotal = 0;
-    
-    orders.forEach(order => {
-      if (order.status !== "cancelled") {
-        const orderDate = new Date(order.date);
-        if (orderDate >= startOfWeek) {
-          weeklyTotal += order.quantity;
-        }
-        
-        if (orderDate >= startOfMonth) {
-          monthlyTotal += order.quantity;
-        }
-      }
-    });
-    
-    // Update the storage
-    localStorage.setItem('weeklyTotal', weeklyTotal.toString());
-    localStorage.setItem('monthlyTotal', monthlyTotal.toString());
-    
-    // Trigger event to notify other components
-    window.dispatchEvent(new CustomEvent('stockUpdated'));
-    
-    console.log('Order totals recalculated:', { weeklyTotal, monthlyTotal });
   };
   
   const deleteOrder = (id: string) => {
@@ -201,7 +170,6 @@ const OrderManagement = () => {
     });
   };
 
-  // Nouvelle fonction pour sauvegarder les commandes actuelles dans un stockage permanent
   const saveOrdersToStorage = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     const storageKey = `orders_backup_${timestamp}`;
@@ -215,12 +183,10 @@ const OrderManagement = () => {
     });
   };
 
-  // Fonction pour afficher les sauvegardes disponibles
   const toggleStoragePanel = () => {
     setShowStoragePanel(!showStoragePanel);
   };
 
-  // Récupérer la liste des sauvegardes disponibles
   const getStorageBackups = () => {
     const backups = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -234,7 +200,6 @@ const OrderManagement = () => {
     return backups.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
-  // Charger une sauvegarde spécifique
   const loadBackup = (key: string) => {
     const backup = localStorage.getItem(key);
     if (backup) {
@@ -255,7 +220,6 @@ const OrderManagement = () => {
     }
   };
 
-  // Supprimer une sauvegarde spécifique
   const deleteBackup = (key: string) => {
     if (confirm(`Êtes-vous sûr de vouloir supprimer cette sauvegarde du ${key.replace('orders_backup_', '')} ?`)) {
       localStorage.removeItem(key);

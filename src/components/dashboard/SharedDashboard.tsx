@@ -9,7 +9,9 @@ import {
   getWeeklyTotal, 
   getMonthlyTotal,
   triggerSyncEvent,
-  setupBroadcastListeners
+  setupBroadcastListeners,
+  getOrders,
+  recalculateOrderTotals
 } from "@/services/orderService";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,6 +33,10 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
 
   // Fonction pour charger manuellement les valeurs
   const loadValues = () => {
+    // Recalculer d'abord les totaux basés sur les commandes réelles
+    recalculateOrderTotals();
+
+    // Ensuite récupérer les valeurs mises à jour
     const currentStock = getAvailableStock();
     const currentWeekly = getWeeklyTotal();
     const currentMonthly = getMonthlyTotal();
@@ -44,7 +50,8 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
       stock: currentStock, 
       weekly: currentWeekly, 
       monthly: currentMonthly,
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
+      ordersCount: getOrders().length
     });
   };
 
@@ -111,6 +118,9 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
 
   const handleRefresh = () => {
     setIsLoading(true);
+    
+    // Recalculer explicitement les totaux avant de charger les valeurs
+    recalculateOrderTotals();
     loadValues();
     
     // Permettre les modifications même en production pour les administrateurs
