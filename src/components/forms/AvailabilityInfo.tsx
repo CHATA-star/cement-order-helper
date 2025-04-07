@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Info, Edit2, Clock, Package, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,6 @@ const AvailabilityInfo = ({
       return;
     }
 
-    // Ne pas mettre à jour les valeurs en mode production si ce n'est pas un administrateur
     if (import.meta.env.PROD && !isAdmin) {
       toast({
         title: "Mode lecture seule",
@@ -129,7 +127,7 @@ const AvailabilityInfo = ({
                 Stock disponible actuellement:
               </p>
             </div>
-            {isAdmin && isEditing && !import.meta.env.PROD ? (
+            {isAdmin && isEditing ? (
               <div className={`${isMobile ? "w-full mt-2" : "ml-2"} inline-flex items-center gap-2`}>
                 <Input
                   type="number"
@@ -160,7 +158,7 @@ const AvailabilityInfo = ({
             >
               <RefreshCw className="h-4 w-4 text-cement-600" />
             </Button>
-            {isAdmin && !import.meta.env.PROD && (
+            {isAdmin && (
               <Button 
                 variant="ghost" 
                 size="icon"

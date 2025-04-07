@@ -130,9 +130,6 @@ export const setupBroadcastListeners = () => {
   }
 };
 
-// Appeler cette fonction au démarrage de l'application
-setupBroadcastListeners();
-
 // Mettre à jour les totaux des commandes quand une nouvelle commande est ajoutée
 const updateOrderTotals = (quantity: number): void => {
   // Mettre à jour le total hebdomadaire
@@ -200,11 +197,18 @@ export const syncAllOrdersToSupabase = async (): Promise<void> => {
 
 // Obtenir la quantité totale pour la semaine
 export const getWeeklyTotal = (): number => {
-  // En mode production (site publié), utiliser la valeur par défaut
+  // En mode production (site publié), vérifier si des données ont été modifiées par l'admin
   if (import.meta.env.PROD) {
+    const storedTotal = localStorage.getItem(WEEKLY_TOTAL_KEY);
+    // Si des données ont été modifiées par l'admin, utiliser celles-ci
+    if (storedTotal) {
+      return parseInt(storedTotal, 10);
+    }
+    // Sinon utiliser la valeur par défaut
     return DEFAULT_WEEKLY_TOTAL;
   }
   
+  // Mode développement - logique existante
   const storedTotal = localStorage.getItem(WEEKLY_TOTAL_KEY);
   if (storedTotal) {
     return parseInt(storedTotal, 10);
@@ -230,11 +234,18 @@ export const getWeeklyTotal = (): number => {
 
 // Obtenir la quantité totale pour le mois
 export const getMonthlyTotal = (): number => {
-  // En mode production (site publié), utiliser la valeur par défaut
+  // En mode production (site publié), vérifier si des données ont été modifiées par l'admin
   if (import.meta.env.PROD) {
+    const storedTotal = localStorage.getItem(MONTHLY_TOTAL_KEY);
+    // Si des données ont été modifiées par l'admin, utiliser celles-ci
+    if (storedTotal) {
+      return parseInt(storedTotal, 10);
+    }
+    // Sinon utiliser la valeur par défaut
     return DEFAULT_MONTHLY_TOTAL;
   }
   
+  // Mode développement - logique existante
   const storedTotal = localStorage.getItem(MONTHLY_TOTAL_KEY);
   if (storedTotal) {
     return parseInt(storedTotal, 10);
@@ -274,13 +285,20 @@ export const setMonthlyTotal = (total: number): void => {
 
 // Obtenir le stock disponible
 export const getAvailableStock = (): number => {
-  // En mode production (site publié), utiliser la valeur par défaut
+  // En mode production (site publié), vérifier si des données ont été modifiées par l'admin
   if (import.meta.env.PROD) {
+    const stock = localStorage.getItem(STOCK_KEY);
+    // Si des données ont été modifiées par l'admin, utiliser celles-ci
+    if (stock) {
+      return parseInt(stock, 10);
+    }
+    // Sinon utiliser la valeur par défaut
     return DEFAULT_AVAILABLE_STOCK;
   }
   
+  // Mode développement - logique existante
   const stock = localStorage.getItem(STOCK_KEY);
-  return stock ? parseInt(stock, 10) : DEFAULT_AVAILABLE_STOCK; // Valeur par défaut
+  return stock ? parseInt(stock, 10) : DEFAULT_AVAILABLE_STOCK;
 };
 
 // Obtenir la date de dernière mise à jour du stock

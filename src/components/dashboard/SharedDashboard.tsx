@@ -70,8 +70,8 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
   const handleRefresh = () => {
     loadValues();
     
-    // On ne déclenche pas triggerSyncEvent en mode production pour éviter de modifier les valeurs par défaut
-    if (!import.meta.env.PROD) {
+    // Permettre les modifications même en production pour les administrateurs
+    if (isAdmin) {
       triggerSyncEvent();
     }
     
