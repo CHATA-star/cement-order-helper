@@ -5,19 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, Settings, TrendingUp, Edit2, LogOut, RefreshCw } from "lucide-react";
+import { User, Package, Settings, TrendingUp, Edit2, LogOut } from "lucide-react";
 import UserManagement from "./UserManagement";
 import OrderManagement from "./OrderManagement";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   getAvailableStock, 
   setAvailableStock, 
-  getWeeklyTotal, 
   setWeeklyTotal, 
-  getMonthlyTotal, 
   setMonthlyTotal,
-  triggerSyncEvent
+  triggerSyncEvent,
 } from "@/services/orderService";
+import SharedDashboard from "@/components/dashboard/SharedDashboard";
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -32,23 +31,15 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [monthlyTotal, setMonthlyTotalState] = useState<string>("");
   const [isEditingWeekly, setIsEditingWeekly] = useState(false);
   const [isEditingMonthly, setIsEditingMonthly] = useState(false);
-  const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
 
   // Fonction pour charger manuellement les valeurs
   const loadValues = () => {
     const currentStock = getAvailableStock();
-    const currentWeekly = getWeeklyTotal();
-    const currentMonthly = getMonthlyTotal();
     
     setAvailableStockState(currentStock.toString());
-    setWeeklyTotalState(currentWeekly.toString());
-    setMonthlyTotalState(currentMonthly.toString());
-    setLastUpdateTime(new Date());
     
-    console.log("AdminDashboard: Values loaded manually", { 
+    console.log("AdminDashboard: Stock value loaded", { 
       stock: currentStock, 
-      weekly: currentWeekly, 
-      monthly: currentMonthly,
       time: new Date().toISOString()
     });
   };
@@ -59,17 +50,13 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     
     // Écouter les événements pour les mises à jour manuelles
     window.addEventListener('storage', loadValues);
-    window.addEventListener('orderUpdated', loadValues);
     window.addEventListener('stockUpdated', loadValues);
     window.addEventListener('syncEvent', loadValues);
-    window.addEventListener('forceDataRefresh', loadValues);
     
     return () => {
       window.removeEventListener('storage', loadValues);
-      window.removeEventListener('orderUpdated', loadValues);
       window.removeEventListener('stockUpdated', loadValues);
       window.removeEventListener('syncEvent', loadValues);
-      window.removeEventListener('forceDataRefresh', loadValues);
     };
   }, []);
 
@@ -195,131 +182,114 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
               
               <div className="mt-4 space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Statistiques des commandes</h3>
+                  {/* Utilisation du nouveau composant partagé */}
+                  <SharedDashboard isAdmin={true} />
                   
-                  <div className="flex justify-end mb-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={loadValues}
-                      className="flex items-center gap-2 text-xs"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Actualiser
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-3 mb-6">
-                    {/* Stock disponible actuellement */}
-                    <Card className="bg-amber-50/50">
-                      <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium text-amber-700">Stock disponible</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-amber-600">Tonnes disponibles :</span>
-                            <span className="font-bold text-xl text-amber-800">{availableStock}</span>
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <h3 className="text-lg font-medium mb-4">Modification du stock</h3>
+                    
+                    <div className="grid grid-cols-1 gap-3 mb-6">
+                      {/* Stock disponible actuellement */}
+                      <Card className="bg-amber-50/50">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <CardTitle className="text-sm font-medium text-amber-700">Modifier stock disponible</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-col gap-2">
+                            <Input 
+                              type="number" 
+                              placeholder="Modifier stock disponible" 
+                              value={availableStock}
+                              onChange={(e) => setAvailableStockState(e.target.value)}
+                              className="text-md text-amber-700 border-amber-300"
+                            />
+                            <Button 
+                              className="bg-amber-600 hover:bg-amber-700 w-full" 
+                              onClick={handleStockUpdate}
+                              size="sm"
+                            >
+                              Mettre à jour le stock
+                            </Button>
                           </div>
-                          <Input 
-                            type="number" 
-                            placeholder="Modifier stock disponible" 
-                            value={availableStock}
-                            onChange={(e) => setAvailableStockState(e.target.value)}
-                            className="text-md text-amber-700 border-amber-300"
-                          />
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Commandes de la semaine */}
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <CardTitle className="text-sm font-medium">Modifier total hebdomadaire</CardTitle>
                           <Button 
-                            className="bg-amber-600 hover:bg-amber-700 w-full" 
-                            onClick={handleStockUpdate}
-                            size="sm"
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => setIsEditingWeekly(!isEditingWeekly)}
                           >
-                            Mettre à jour le stock
+                            <Edit2 className="h-4 w-4 text-cement-500" />
                           </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Commandes de la semaine */}
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Commandes de la semaine</CardTitle>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => setIsEditingWeekly(!isEditingWeekly)}
-                        >
-                          <Edit2 className="h-4 w-4 text-cement-500" />
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        {isEditingWeekly ? (
-                          <div className="flex flex-col gap-2">
-                            <Input 
-                              type="number" 
-                              placeholder="Entrez le total hebdomadaire" 
-                              value={weeklyTotal}
-                              onChange={(e) => setWeeklyTotalState(e.target.value)}
-                              className="text-md font-medium"
-                            />
-                            <Button 
-                              className="bg-cement-600 hover:bg-cement-700 w-full" 
-                              onClick={handleWeeklyUpdate}
-                              size="sm"
-                            >
-                              Mettre à jour
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="text-2xl font-bold">{Number(weeklyTotal)} tonnes</div>
-                            <p className="text-xs text-muted-foreground">Total des commandes cette semaine</p>
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Commandes du mois */}
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Commandes du mois</CardTitle>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => setIsEditingMonthly(!isEditingMonthly)}
-                        >
-                          <Edit2 className="h-4 w-4 text-cement-500" />
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        {isEditingMonthly ? (
-                          <div className="flex flex-col gap-2">
-                            <Input 
-                              type="number" 
-                              placeholder="Entrez le total mensuel" 
-                              value={monthlyTotal}
-                              onChange={(e) => setMonthlyTotalState(e.target.value)}
-                              className="text-md font-medium"
-                            />
-                            <Button 
-                              className="bg-cement-600 hover:bg-cement-700 w-full" 
-                              onClick={handleMonthlyUpdate}
-                              size="sm"
-                            >
-                              Mettre à jour
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="text-2xl font-bold">{Number(monthlyTotal)} tonnes</div>
-                            <p className="text-xs text-muted-foreground">Total des commandes ce mois</p>
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="text-xs text-gray-500 text-center">
-                    Dernière mise à jour: {lastUpdateTime.toLocaleTimeString()}
+                        </CardHeader>
+                        <CardContent>
+                          {isEditingWeekly ? (
+                            <div className="flex flex-col gap-2">
+                              <Input 
+                                type="number" 
+                                placeholder="Entrez le total hebdomadaire" 
+                                value={weeklyTotal}
+                                onChange={(e) => setWeeklyTotalState(e.target.value)}
+                                className="text-md font-medium"
+                              />
+                              <Button 
+                                className="bg-cement-600 hover:bg-cement-700 w-full" 
+                                onClick={handleWeeklyUpdate}
+                                size="sm"
+                              >
+                                Mettre à jour
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-md text-gray-500">
+                              Cliquez sur l'icône de crayon pour modifier le total hebdomadaire
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Commandes du mois */}
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <CardTitle className="text-sm font-medium">Modifier total mensuel</CardTitle>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => setIsEditingMonthly(!isEditingMonthly)}
+                          >
+                            <Edit2 className="h-4 w-4 text-cement-500" />
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          {isEditingMonthly ? (
+                            <div className="flex flex-col gap-2">
+                              <Input 
+                                type="number" 
+                                placeholder="Entrez le total mensuel" 
+                                value={monthlyTotal}
+                                onChange={(e) => setMonthlyTotalState(e.target.value)}
+                                className="text-md font-medium"
+                              />
+                              <Button 
+                                className="bg-cement-600 hover:bg-cement-700 w-full" 
+                                onClick={handleMonthlyUpdate}
+                                size="sm"
+                              >
+                                Mettre à jour
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-md text-gray-500">
+                              Cliquez sur l'icône de crayon pour modifier le total mensuel
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 </div>
               </div>

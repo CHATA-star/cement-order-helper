@@ -4,29 +4,18 @@ import { useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CementOrderForm from "@/components/forms/CementOrderForm";
 import OrderStats from "@/components/dashboard/OrderStats";
-import { Building, Package, MapPin, CheckCircle2, MessageCircle, RefreshCw } from "lucide-react";
+import SharedDashboard from "@/components/dashboard/SharedDashboard";
+import { Building, Package, MapPin, CheckCircle2, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { getAvailableStock } from "@/services/orderService";
-import { useToast } from "@/hooks/use-toast";
-
-const STOCK_KEY = 'available_stock';
-const WEEKLY_TOTAL_KEY = 'weekly_total';
-const MONTHLY_TOTAL_KEY = 'monthly_total';
-const SYNC_TIMESTAMP_KEY = 'sync_timestamp';
 
 const Commande = () => {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [availableStock, setAvailableStock] = useState(0);
-  const { toast } = useToast();
   
-  const updateAllData = () => {
-    console.log("Commande: Updating all data from storage");
-    setAvailableStock(getAvailableStock());
-    window.dispatchEvent(new CustomEvent('forceDataRefresh'));
-  };
-
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const adminToken = searchParams.get('adminToken');
@@ -35,51 +24,27 @@ const Commande = () => {
       setIsAdmin(true);
     }
 
-    updateAllData();
+    setAvailableStock(getAvailableStock());
     
-    const updateInterval = setInterval(updateAllData, 2000);
-    
-    const handleStorageChange = (e) => {
-      console.log("Commande: Storage change detected:", e?.key);
-      updateAllData();
+    // Ajouter les écouteurs d'événements pour les mises à jour du stock
+    const handleStorageChange = () => {
+      setAvailableStock(getAvailableStock());
     };
     
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('stockUpdated', updateAllData);
-    window.addEventListener('orderUpdated', updateAllData);
-    window.addEventListener('syncEvent', updateAllData);
-    
-    const pollSyncTimestamp = setInterval(() => {
-      const lastSync = localStorage.getItem(SYNC_TIMESTAMP_KEY);
-      const currentTimestamp = localStorage.getItem('current_sync_timestamp');
-      
-      if (lastSync !== currentTimestamp) {
-        console.log("Commande: Sync timestamp changed, refreshing data");
-        localStorage.setItem('current_sync_timestamp', lastSync || '');
-        updateAllData();
-      }
-    }, 1000);
-    
-    console.log("Commande: Component mounted and ready for real-time updates");
+    window.addEventListener('stockUpdated', handleStorageChange);
+    window.addEventListener('orderUpdated', handleStorageChange);
+    window.addEventListener('syncEvent', handleStorageChange);
+    window.addEventListener('forceDataRefresh', handleStorageChange);
     
     return () => {
-      clearInterval(updateInterval);
-      clearInterval(pollSyncTimestamp);
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('stockUpdated', updateAllData);
-      window.removeEventListener('orderUpdated', updateAllData);
-      window.removeEventListener('syncEvent', updateAllData);
+      window.removeEventListener('stockUpdated', handleStorageChange);
+      window.removeEventListener('orderUpdated', handleStorageChange);
+      window.removeEventListener('syncEvent', handleStorageChange);
+      window.removeEventListener('forceDataRefresh', handleStorageChange);
     };
   }, [location]);
-
-  const forceRefresh = () => {
-    updateAllData();
-    localStorage.setItem(SYNC_TIMESTAMP_KEY, new Date().toISOString());
-    toast({
-      title: "Données actualisées",
-      description: "Toutes les informations ont été mises à jour."
-    });
-  };
 
   return (
     <MainLayout>
@@ -97,19 +62,14 @@ const Commande = () => {
               ✓ Mode administrateur activé
             </div>
           )}
-          <div className="mt-3">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={forceRefresh}
-              className="text-xs gap-1"
-            >
-              <RefreshCw className="h-3 w-3" /> Actualiser les données
-            </Button>
-          </div>
         </section>
 
-        <OrderStats isAdmin={isAdmin} />
+        {/* Afficher le tableau de bord partagé */}
+        <Card>
+          <CardContent className="pt-6">
+            <SharedDashboard />
+          </CardContent>
+        </Card>
 
         <section className="mb-12">
           <div className="grid md:grid-cols-4 gap-4 mb-10">
