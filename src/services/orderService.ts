@@ -1,4 +1,3 @@
-
 interface OrderData {
   establishmentName: string;
   quantity: number;
@@ -9,12 +8,17 @@ interface OrderData {
 
 // Clés de stockage localStorage
 const ORDERS_KEY = 'cement_orders';
-const WEEKLY_TOTAL_KEY = 'weekly_total';
-const MONTHLY_TOTAL_KEY = 'monthly_total';
+const WEEKLY_TOTAL_KEY = 'weekly_TOTAL';
+const MONTHLY_TOTAL_KEY = 'monthly_TOTAL';
 const STOCK_KEY = 'available_stock';
 const STOCK_LAST_UPDATE_KEY = 'stock_last_update';
 const SYNC_TIMESTAMP_KEY = 'sync_timestamp';
 const ORDER_STORAGE_KEY = 'admin_orders';
+
+// Valeurs par défaut pour les métriques du tableau de bord
+const DEFAULT_WEEKLY_TOTAL = 1250; // tonnes
+const DEFAULT_MONTHLY_TOTAL = 4800; // tonnes
+const DEFAULT_AVAILABLE_STOCK = 2000; // tonnes
 
 // Récupérer toutes les commandes
 export const getAllOrders = (): OrderData[] => {
@@ -196,6 +200,11 @@ export const syncAllOrdersToSupabase = async (): Promise<void> => {
 
 // Obtenir la quantité totale pour la semaine
 export const getWeeklyTotal = (): number => {
+  // En mode production (site publié), utiliser la valeur par défaut
+  if (import.meta.env.PROD) {
+    return DEFAULT_WEEKLY_TOTAL;
+  }
+  
   const storedTotal = localStorage.getItem(WEEKLY_TOTAL_KEY);
   if (storedTotal) {
     return parseInt(storedTotal, 10);
@@ -221,6 +230,11 @@ export const getWeeklyTotal = (): number => {
 
 // Obtenir la quantité totale pour le mois
 export const getMonthlyTotal = (): number => {
+  // En mode production (site publié), utiliser la valeur par défaut
+  if (import.meta.env.PROD) {
+    return DEFAULT_MONTHLY_TOTAL;
+  }
+  
   const storedTotal = localStorage.getItem(MONTHLY_TOTAL_KEY);
   if (storedTotal) {
     return parseInt(storedTotal, 10);
@@ -260,8 +274,13 @@ export const setMonthlyTotal = (total: number): void => {
 
 // Obtenir le stock disponible
 export const getAvailableStock = (): number => {
+  // En mode production (site publié), utiliser la valeur par défaut
+  if (import.meta.env.PROD) {
+    return DEFAULT_AVAILABLE_STOCK;
+  }
+  
   const stock = localStorage.getItem(STOCK_KEY);
-  return stock ? parseInt(stock, 10) : 2000; // Valeur par défaut de 2000 tonnes
+  return stock ? parseInt(stock, 10) : DEFAULT_AVAILABLE_STOCK; // Valeur par défaut
 };
 
 // Obtenir la date de dernière mise à jour du stock

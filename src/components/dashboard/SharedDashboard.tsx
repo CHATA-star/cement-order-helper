@@ -69,7 +69,11 @@ const SharedDashboard: React.FC<SharedDashboardProps> = ({ isAdmin = false }) =>
 
   const handleRefresh = () => {
     loadValues();
-    triggerSyncEvent();
+    
+    // On ne déclenche pas triggerSyncEvent en mode production pour éviter de modifier les valeurs par défaut
+    if (!import.meta.env.PROD) {
+      triggerSyncEvent();
+    }
     
     toast({
       title: "Données actualisées",
